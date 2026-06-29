@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Telegram‑подобный чат</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
+        body { background: #0a0a0a; color: #e4e4e4; height: 100vh; overflow: hidden; }
+
+        .app { display: flex; height: 100vh; max-width: 1200px; margin: 0 auto; background: #111; }
+        /* Левая панель (список чатов) */
+        .sidebar { width: 320px; background: #1a1a1a; border-right: 1px solid #2b2b2b; display: flex; flex-direction: column; flex-shrink: 0; }
+        .sidebar-header { padding: 16px 20px; border-bottom: 1px solid #2b2b2b; display: flex; justify-content: space-between; align-items: center; }
+        .sidebar-header h2 { font-size: 20px; font-weight: 700; color: #fff; }
+        .sidebar-header .user-info { display: flex; align-items: center; gap: 10px; font-size: 14px; color: #aaa; }
+        .sidebar-header .user-info .avatar { width: 32px; height: 32px; border-radius: 50%; background: #2a6fdb; display: flex; align-items: center; justify-content: center; font-weight: 600; color: #fff; }
+        .sidebar-header .logout-btn { background: none; border: none; color: #e74c3c; cursor: pointer; font-size: 18px; padding: 4px 8px; border-radius: 6px; }
+        .sidebar-header .logout-btn:hover { background: #2a2a2a; }
+        .chat-list { flex: 1; overflow-y: auto; padding: 8px 0; }
+        .chat-item { display: flex; align-items: center; gap: 12px; padding: 12px 20px; cursor: pointer; transition: 0.1s; border-left: 3px solid transparent; }
+        .chat-item:hover { background: #242424; }
+        .chat-item.active { background: #2b2b2b; border-left-color: #2a6fdb; }
+        .chat-item .avatar { width: 42px; height: 42px; border-radius: 50%; background: #2a6fdb; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 18px; color: #fff; flex-shrink: 0; }
+        .chat-item .info { flex: 1; overflow: hidden; }
+        .chat-item .info .name { font-weight: 500; font-size: 15px; color: #fff; }
+        .chat-item .info .last-msg { font-size: 13px; color: #888; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .chat-item .time { font-size: 12px; color: #666; flex-shrink: 0; }
+        .chat-item .unread { background: #2a6fdb; color: #fff; border-radius: 12px; padding: 2px 8px; font-size: 12px; }
+
+        /* Правая панель (чат) */
+        .chat-panel { flex: 1; display: flex; flex-direction: column; background: #0e0e0e; }
+        .chat-panel-header { padding: 12px 20px; border-bottom: 1px solid #2b2b2b; display: flex; align-items: center; gap: 12px; background: #161616; }
+        .chat-panel-header .avatar { width: 36px; height: 36px; border-radius: 50%; background: #2a6fdb; display: flex; align-items: center; justify-content: center; font-weight: 600; color: #fff; }
+        .chat-panel-header .name { font-weight: 500; font-size: 16px; color: #fff; }
+        .chat-panel-header .status { font-size: 13px; color: #888; }
+
+        .messages-area { flex: 1; overflow-y: auto; padding: 16px 20px; display: flex; flex-direction: column; gap: 4px; background: #0e0e0e; }
+        .msg { max-width: 70%; padding: 8px 14px; border-radius: 16px; line-height: 1.4; font-size: 14px; word-wrap: break-word; position: relative; }
+        .msg.self { align-self: flex-end; background: #2a6fdb; color: #fff; border-bottom-right-radius: 4px; }
+        .msg.other { align-self: flex-start; background: #242424; color: #e4e4e4; border-bottom-left-radius: 4px; }
+        .msg .time { font-size: 11px; opacity: 0.6; margin-top: 4px; display: block; }
+        .msg .delete-btn { background: none; border: none; color: #f87171; cursor: pointer; font-size: 12px; margin-left: 8px; opacity: 0.5; }
+        .msg .delete-btn:hover { opacity: 1; }
+        .msg img { max-width: 200px; max-height: 150px; border-radius: 10px; margin-top: 4px; display: block; cursor: pointer; }
+
+        .input-area { padding: 12px 20px; border-top: 1px solid #2b2b2b; background: #161616; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+        .input-area input[type="text"] { flex: 1; padding: 10px 16px; border-radius: 20px; border: none; background: #242424; color: #e4e4e4; font-size: 14px; outline: none; min-width: 100px; }
+        .input-area input[type="text"]:focus { background: #2b2b2b; }
+        .input-area .btn { padding: 8px 16px; border: none; border-radius: 20px; background: #2a6fdb; color: #fff; font-weight: 500; cursor: pointer; transition: 0.15s; white-space: nowrap; }
+        .input-area .btn:hover { background: #1e5bbf; }
+        .input-area .btn-cat { background: #f59e0b; }
+        .input-area .btn-cat:hover { background: #d97706; }
+        .input-area .btn-add { background: #10b981; }
+        .input-area .btn-add:hover { background: #059669; }
+        .input-area .add-gif-form { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; width: 100%; }
+        .input-area .add-gif-form input { flex: 1; min-width: 150px; }
+
+        /* Экран входа */
+        #loginScreen { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background: #0a0a0a; gap: 14px; padding: 20px; }
+        #loginScreen h1 { font-size: 32px; color: #fff; margin-bottom: 8px; }
+        #loginScreen input { width: 300px; max-width: 90%; padding: 14px 18px; border-radius: 40px; border: none; background: #242424; color: #e4e4e4; font-size: 16px; outline: none; }
+        #loginScreen input:focus { background: #2b2b2b; }
+        #loginScreen .btn { width: 300px; max-width: 90%; padding: 14px; border: none; border-radius: 40px; background: #2a6fdb; color: #fff; font-weight: 600; font-size: 16px; cursor: pointer; transition: 0.15s; }
+        #loginScreen .btn:hover { background: #1e5bbf; }
+        #loginScreen .toggle-link { color: #888; cursor: pointer; font-size: 14px; text-decoration: underline; }
+        #loginScreen .error { color: #e74c3c; font-size: 14px; min-height: 20px; }
+        #loginScreen .remember { display: flex; align-items: center; gap: 8px; color: #aaa; font-size: 14px; }
+        #loginScreen .remember input { width: auto; }
+
+        /* Скрываем экран чата до входа */
+        #chatApp { display: none; height: 100vh; }
+
+        @media (max-width: 700px) {
+            .sidebar { width: 100%; height: 100vh; border-right: none; }
+            .chat-panel { display: none; }
+            .chat-panel.open { display: flex; }
+            .sidebar.hide { display: none; }
+            #chatApp { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Экран входа -->
+    <div id="loginScreen">
+        <h1>📱 Чат</h1>
+        <div id="loginError" class="error"></div>
+        <input type="text" id="loginInput" placeholder="Логин">
+        <input type="password" id="passInput" placeholder="Пароль">
+        <div class="remember">
+            <input type="checkbox" id="rememberCheck" checked> <label for="rememberCheck">Запомнить меня</label>
+        </div>
+        <button class="btn" id="loginBtn">Войти</button>
+        <span class="toggle-link" id="toggleLogin">Нет аккаунта? Зарегистрироваться</span>
+    </div>
+
+    <!-- Основное приложение (чат) -->
+    <div id="chatApp">
+        <!-- Левая панель -->
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h2>Чаты</h2>
+                <div class="user-info">
+                    <span id="userNameDisplay">User</span>
+                    <button class="logout-btn" id="logoutBtn">⏻</button>
+                </div>
+            </div>
+            <div class="chat-list" id="chatList">
+                <!-- Глобальный чат -->
+                <div class="chat-item active" data-chat="global" id="chatGlobal">
+                    <div class="avatar">🌍</div>
+                    <div class="info">
+                        <div class="name">Глобальный чат</div>
+                        <div class="last-msg" id="globalLastMsg">Добро пожаловать!</div>
+                    </div>
+                    <div class="time" id="globalTime"></div>
+                </div>
+                <!-- Личные чаты будут добавлены динамически -->
+            </div>
+        </div>
+
+        <!-- Правая панель (чат) -->
+        <div class="chat-panel" id="chatPanel">
+            <div class="chat-panel-header">
+                <div class="avatar" id="panelAvatar">🌍</div>
+                <div>
+                    <div class="name" id="panelName">Глобальный чат</div>
+                    <div class="status" id="panelStatus">онлайн</div>
+                </div>
+            </div>
+            <div class="messages-area" id="messagesArea">
+                <div class="empty-chat" style="color:#666; text-align:center; margin-top:40px;">💬 Начните общение</div>
+            </div>
+            <div class="input-area">
+                <input type="text" id="messageInput" placeholder="Сообщение..." maxlength="500">
+                <button class="btn btn-cat" id="catBtn">🐱</button>
+                <button class="btn" id="sendBtn">→</button>
+                <div class="add-gif-form">
+                    <input type="text" id="newGifInput" placeholder="URL своей гифки">
+                    <button class="btn btn-add" id="addGifBtn">➕</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ===== КОНФИГ =====
+        const DB_URL = 'https://makc-894d6-default-rtdb.firebaseio.com/';
+
+        // ===== ДЕФОЛТНЫЕ ГИФКИ =====
+        const DEFAULT_CATS = [
+            'https://cataas.com/cat/gif?1', 'https://cataas.com/cat/gif?2',
+            'https://cataas.com/cat/gif?3', 'https://cataas.com/cat/gif?4',
+            'https://cataas.com/cat/gif?5', 'https://cataas.com/cat/gif?6',
+            'https://cataas.com/cat/gif?7', 'https://cataas.com/cat/gif?8',
+            'https://cataas.com/cat/gif?9', 'https://cataas.com/cat/gif?10',
+            'https://cataas.com/cat/gif?11', 'https://cataas.com/cat/gif?12',
+            'https://cataas.com/cat/gif?13', 'https://cataas.com/cat/gif?14',
+            'https://cataas.com/cat/gif?15', 'https://cataas.com/cat/gif?16',
+            'https://cataas.com/cat/gif?17', 'https://cataas.com/cat/gif?18',
+            'https://cataas.com/cat/gif?19', 'https://cataas.com/cat/gif?20'
+        ];
+
+        // ===== ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ =====
+        let currentUser = null;            // { username, password, name }
+        let currentChat = 'global';        // 'global' или username партнёра
+        let currentChatId = null;          // для личных чатов
+        let messages = {};
+        let users = {};
+        let catGifs = [];
+        let pollIntervals = [];
+
+        // DOM
+        const loginScreen = document.getElementById('loginScreen');
+        const chatApp = document.getElementById('chatApp');
+        const loginError = document.getElementById('loginError');
+        const loginInput = document.getElementById('loginInput');
+        const passInput = document.getElementById('passInput');
+        const rememberCheck = document.getElementById('rememberCheck');
+        const loginBtn = document.getElementById('loginBtn');
+        const toggleLogin = document.getElementById('toggleLogin');
+        const userNameDisplay = document.getElementById('userNameDisplay');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const chatList = document.getElementById('chatList');
+        const messagesArea = document.getElementById('messagesArea');
+        const messageInput = document.getElementById('messageInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const catBtn = document.getElementById('catBtn');
+        const addGifBtn = document.getElementById('addGifBtn');
+        const newGifInput = document.getElementById('newGifInput');
+        const panelName = document.getElementById('panelName');
+        const panelStatus = document.getElementById('panelStatus');
+        const panelAvatar = document.getElementById('panelAvatar');
+        const chatGlobal = document.getElementById('chatGlobal');
+        const globalLastMsg = document.getElementById('globalLastMsg');
+        const globalTime = document.getElementById('globalTime');
+
+        let isLogin = true;
+
+        // ===== РАБОТА С БАЗОЙ (REST) =====
+        async function dbGet(path) {
+            const res = await fetch(DB_URL + path + '.json');
+            if (!res.ok) throw new Error('DB error');
+            return res.json();
+        }
+        async function dbPut(path, data) {
+            const res = await fetch(DB_URL + path + '.json', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            if (!res.ok) throw new Error('DB error');
+            return res.json();
+        }
+        async function dbPatch(path, data) {
+            const res = await fetch(DB_URL + path + '.json', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            if (!res.ok) throw new Error('DB error');
+            return res.json();
+        }
+        async function dbDelete(path) {
+            const res = await fetch(DB_URL + path + '.json', { method: 'DELETE' });
+            if (!res.ok) throw new Error('DB error');
+            return res.json();
+        }
+        async function dbPush(path, data) {
+            const res = await fetch(DB_URL + path + '.json', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            if (!res.ok) throw new Error('DB error');
+            return res.json();
+        }
+
+        // ===== АУТЕНТИФИКАЦИЯ =====
+        async function registerUser(username, password) {
+            const users = await dbGet('users');
+            if (users && users[username]) throw new Error('Пользователь уже существует');
+            await dbPut(`users/${username}`, { password, name: username, status: 'online', lastSeen: Date.now() });
+            return { username, password, name: username };
+        }
+        async function loginUser(username, password) {
+            const user = await dbGet(`users/${username}`);
+            if (!user || user.password !== password) throw new Error('Неверный логин или пароль');
+            await dbPatch(`users/${username}`, { status: 'online', lastSeen: Date.now() });
+            return { username, ...user };
+        }
+        async function logoutUser() {
+            if (currentUser) {
+                await dbPatch(`users/${currentUser.username}`, { status: 'offline', lastSeen: Date.now() });
+            }
+            localStorage.removeItem('chat_user');
+            localStorage.removeItem('chat_pass');
+        }
+
+        // ===== ЗАГРУЗКА ГИФОК =====
+        async function loadCatGifs() {
+            const data = await dbGet('catGifs');
+            if (data) {
+                catGifs = Object.values(data);
+            } else {
+                const gifsObj = {};
+                DEFAULT_CATS.forEach((url, idx) => gifsObj[idx] = url);
+                await dbPut('catGifs', gifsObj);
+                catGifs = DEFAULT_CATS.slice();
+            }
+        }
+        async function addCatGif(url) {
+            if (!url.trim()) return;
+            try { new URL(url); } catch { alert('Некорректный URL'); return; }
+            await dbPush('catGifs', url);
+            await loadCatGifs();
+            newGifInput.value = '';
+            alert('Гифка добавлена!');
+        }
+
+        // ===== ПОЛЬЗОВАТЕЛИ И ЧАТЫ =====
+        async function loadUsers() {
+            const data = await dbGet('users');
+            users = data || {};
+            renderChatList();
+        }
+        function getChatId(user1, user2) {
+            return [user1, user2].sort().join('_');
+        }
+
+        // ===== ЗАГРУЗКА СООБЩЕНИЙ =====
+        async function loadMessages(chat) {
+            let path;
+            if (chat === 'global') {
+                path = 'messages/global';
+            } else {
+                const partner = chat;
+                const chatId = getChatId(currentUser.username, partner);
+                path = `messages/private/${chatId}`;
+            }
+            const data = await dbGet(path);
+            const msgs = [];
+            if (data) {
+                for (let key in data) {
+                    msgs.push({ ...data[key], id: key });
+                }
+                msgs.sort((a,b) => a.timestamp - b.timestamp);
+            }
+            messages[chat] = msgs;
+            return msgs;
+        }
+
+        function renderMessages(msgs) {
+            messagesArea.innerHTML = '';
+            if (!msgs || msgs.length === 0) {
+                messagesArea.innerHTML = '<div style="color:#666; text-align:center; margin-top:40px;">💬 Нет сообщений</div>';
+                return;
+            }
+            msgs.forEach(msg => {
+                const isSelf = msg.sender === currentUser.username;
+                const div = document.createElement('div');
+                div.className = 'msg ' + (isSelf ? 'self' : 'other');
+                let content = '';
+                if (msg.text) content += escapeHtml(msg.text);
+                if (msg.imageUrl) {
+                    content += `<br><img src="${msg.imageUrl}" alt="гифка" onerror="this.style.display='none'">`;
+                }
+                let deleteBtn = '';
+                if (isSelf) {
+                    deleteBtn = `<button class="delete-btn" data-chat="${currentChat}" data-id="${msg.id}">🗑</button>`;
+                }
+                div.innerHTML = content + `<span class="time">${timeStr(msg.timestamp)}</span>` + deleteBtn;
+                messagesArea.appendChild(div);
+            });
+            // Обработчики удаления
+            messagesArea.querySelectorAll('.delete-btn').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    const chat = btn.dataset.chat;
+                    const id = btn.dataset.id;
+                    if (!confirm('Удалить сообщение?')) return;
+                    let path;
+                    if (chat === 'global') path = 'messages/global';
+                    else {
+                        const chatId = getChatId(currentUser.username, chat);
+                        path = `messages/private/${chatId}`;
+                    }
+                    await dbDelete(`${path}/${id}`);
+                    await refreshCurrentChat();
+                });
+            });
+            messagesArea.scrollTop = messagesArea.scrollHeight;
+        }
+
+        // ===== ОБНОВЛЕНИЕ ТЕКУЩЕГО ЧАТА =====
+        async function refreshCurrentChat() {
+            if (!currentUser) return;
+            const msgs = await loadMessages(currentChat);
+            renderMessages(msgs);
+            // Обновим последнее сообщение в списке чатов
+            updateChatLastMsg(currentChat, msgs);
+        }
+
+        function updateChatLastMsg(chat, msgs) {
+            const last = msgs && msgs.length > 0 ? msgs[msgs.length - 1] : null;
+            const preview = last ? (last.text ? last.text : '🖼️ Гифка') : 'Нет сообщений';
+            const time = last ? timeStr(last.timestamp) : '';
+            if (chat === 'global') {
+                globalLastMsg.textContent = preview;
+                globalTime.textContent = time;
+            } else {
+                const item = chatList.querySelector(`.chat-item[data-chat="${chat}"]`);
+                if (item) {
+                    item.querySelector('.last-msg').textContent = preview;
+                    item.querySelector('.time').textContent = time;
+                }
+            }
+        }
+
+        // ===== ОТПРАВКА СООБЩЕНИЯ =====
+        async function sendMessage(text, imageUrl = null) {
+            if (!text && !imageUrl) return;
+            if (currentChat === 'private' && currentChat === currentUser.username) {
+                alert('Нельзя отправлять себе');
+                return;
+            }
+            const msg = { sender: currentUser.username, text: text || '', timestamp: Date.now() };
+            if (imageUrl) msg.imageUrl = imageUrl;
+            let path;
+            if (currentChat === 'global') {
+                path = 'messages/global';
+            } else {
+                const chatId = getChatId(currentUser.username, currentChat);
+                path = `messages/private/${chatId}`;
+            }
+            await dbPush(path, msg);
+            messageInput.value = '';
+            await refreshCurrentChat();
+            // Обновим список чатов (последнее сообщение)
+            renderChatList();
+        }
+
+        async function sendCat() {
+            if (catGifs.length === 0) {
+                alert('Список гифок пуст, добавьте свою!');
+                return;
+            }
+            const url = catGifs[Math.floor(Math.random() * catGifs.length)];
+            await sendMessage('', url);
+        }
+
+        // ===== РЕНДЕР СПИСКА ЧАТОВ =====
+        function renderChatList() {
+            // Оставляем только глобальный чат и добавляем личные
+            const globalItem = chatList.querySelector('#chatGlobal');
+            chatList.innerHTML = '';
+            chatList.appendChild(globalItem);
+
+            // Сортируем пользователей по имени
+            const sorted = Object.keys(users).filter(u => u !== currentUser.username).sort();
+            sorted.forEach(uname => {
+                const user = users[uname];
+                // Проверяем, есть ли уже такой чат
+                if (chatList.querySelector(`.chat-item[data-chat="${uname}"]`)) return;
+                const div = document.createElement('div');
+                div.className = 'chat-item';
+                div.dataset.chat = uname;
+                if (currentChat === uname) div.classList.add('active');
+                const avatar = document.createElement('div');
+                avatar.className = 'avatar';
+                avatar.textContent = (user.name || '?').charAt(0).toUpperCase();
+                const info = document.createElement('div');
+                info.className = 'info';
+                const name = document.createElement('div');
+                name.className = 'name';
+                name.textContent = user.name || uname;
+                const lastMsg = document.createElement('div');
+                lastMsg.className = 'last-msg';
+                // Получаем последнее сообщение из сохранённых
+                const msgs = messages[uname] || [];
+                const last = msgs.length > 0 ? msgs[msgs.length - 1] : null;
+                lastMsg.textContent = last ? (last.text ? last.text : '🖼️ Гифка') : 'Нет сообщений';
+                info.appendChild(name);
+                info.appendChild(lastMsg);
+                const time = document.createElement('div');
+                time.className = 'time';
+                time.textContent = last ? timeStr(last.timestamp) : '';
+                div.appendChild(avatar);
+                div.appendChild(info);
+                div.appendChild(time);
+                div.addEventListener('click', () => {
+                    if (currentChat === uname) return;
+                    currentChat = uname;
+                    refreshCurrentChat();
+                    renderChatList();
+                    updatePanelHeader(uname);
+                });
+                chatList.appendChild(div);
+            });
+
+            // Обновляем активный класс
+            chatList.querySelectorAll('.chat-item').forEach(el => {
+                el.classList.toggle('active', el.dataset.chat === currentChat);
+            });
+            // Обновляем глобальный чат
+            const globalMsgs = messages['global'] || [];
+            const lastGlobal = globalMsgs.length > 0 ? globalMsgs[globalMsgs.length - 1] : null;
+            globalLastMsg.textContent = lastGlobal ? (lastGlobal.text ? lastGlobal.text : '🖼️ Гифка') : 'Нет сообщений';
+            globalTime.textContent = lastGlobal ? timeStr(lastGlobal.timestamp) : '';
+        }
+
+        function updatePanelHeader(chat) {
+            if (chat === 'global') {
+                panelName.textContent = 'Глобальный чат';
+                panelAvatar.textContent = '🌍';
+                panelStatus.textContent = 'онлайн';
+            } else {
+                const user = users[chat];
+                panelName.textContent = user ? user.name : chat;
+                panelAvatar.textContent = user ? user.name.charAt(0).toUpperCase() : '?';
+                panelStatus.textContent = user && user.status === 'online' ? 'онлайн' : 'офлайн';
+            }
+        }
+
+        // ===== ВСПОМОГАТЕЛЬНЫЕ =====
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        function timeStr(ts) {
+            return new Date(ts).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+        }
+        function clearIntervals() {
+            pollIntervals.forEach(clearInterval);
+            pollIntervals = [];
+        }
+
+        // ===== ПОЛЛИНГ =====
+        function startPolling() {
+            const interval = setInterval(async () => {
+                if (!currentUser) return;
+                await loadUsers();
+                await loadCatGifs();
+                // Обновляем сообщения для текущего чата
+                await refreshCurrentChat();
+                // Обновляем список чатов (последние сообщения)
+                renderChatList();
+                // Обновляем статус
+                await dbPatch(`users/${currentUser.username}`, { status: 'online', lastSeen: Date.now() });
+            }, 3000);
+            pollIntervals.push(interval);
+        }
+
+        // ===== ИНИЦИАЛИЗАЦИЯ ПОСЛЕ ВХОДА =====
+        async function initApp() {
+            await loadUsers();
+            await loadCatGifs();
+            // Загружаем сообщения для глобального чата
+            await loadMessages('global');
+            // Если есть сохранённый текущий чат (например, из localStorage)
+            if (!currentChat) currentChat = 'global';
+            // Загружаем сообщения для текущего чата, если он не глобальный
+            if (currentChat !== 'global') {
+                await loadMessages(currentChat);
+            }
+            refreshCurrentChat();
+            renderChatList();
+            updatePanelHeader(currentChat);
+            startPolling();
+
+            // Обработчики
+            sendBtn.addEventListener('click', () => sendMessage(messageInput.value));
+            messageInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') sendMessage(messageInput.value); });
+            catBtn.addEventListener('click', sendCat);
+            addGifBtn.addEventListener('click', () => addCatGif(newGifInput.value));
+            newGifInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') addCatGif(newGifInput.value); });
+
+            // Клик по глобальному чату
+            chatGlobal.addEventListener('click', () => {
+                if (currentChat === 'global') return;
+                currentChat = 'global';
+                refreshCurrentChat();
+                renderChatList();
+                updatePanelHeader('global');
+            });
+        }
+
+        // ===== АВТОРИЗАЦИЯ =====
+        async function doLogin(username, password, remember) {
+            try {
+                if (isLogin) {
+                    currentUser = await loginUser(username, password);
+                } else {
+                    currentUser = await registerUser(username, password);
+                }
+                userNameDisplay.textContent = currentUser.name;
+                loginScreen.style.display = 'none';
+                chatApp.style.display = 'flex';
+                if (remember) {
+                    localStorage.setItem('chat_user', username);
+                    localStorage.setItem('chat_pass', password);
+                } else {
+                    localStorage.removeItem('chat_user');
+                    localStorage.removeItem('chat_pass');
+                }
+                await initApp();
+            } catch (err) {
+                loginError.textContent = err.message;
+                throw err;
+            }
+        }
+
+        async function autoLogin() {
+            const savedUser = localStorage.getItem('chat_user');
+            const savedPass = localStorage.getItem('chat_pass');
+            if (savedUser && savedPass) {
+                loginInput.value = savedUser;
+                passInput.value = savedPass;
+                rememberCheck.checked = true;
+                try {
+                    await doLogin(savedUser, savedPass, true);
+                    return true;
+                } catch { return false; }
+            }
+            return false;
+        }
+
+        loginBtn.addEventListener('click', async () => {
+            const username = loginInput.value.trim();
+            const password = passInput.value.trim();
+            if (!username || !password) { loginError.textContent = 'Заполните все поля'; return; }
+            loginError.textContent = '';
+            await doLogin(username, password, rememberCheck.checked);
+        });
+
+        toggleLogin.addEventListener('click', () => {
+            isLogin = !isLogin;
+            loginBtn.textContent = isLogin ? 'Войти' : 'Зарегистрироваться';
+            toggleLogin.textContent = isLogin ? 'Нет аккаунта? Зарегистрироваться' : 'Уже есть аккаунт? Войти';
+            loginError.textContent = '';
+        });
+
+        logoutBtn.addEventListener('click', async () => {
+            await logoutUser();
+            clearIntervals();
+            currentUser = null;
+            currentChat = 'global';
+            messages = {};
+            chatApp.style.display = 'none';
+            loginScreen.style.display = 'flex';
+            loginInput.value = '';
+            passInput.value = '';
+            loginError.textContent = '';
+        });
+
+        window.addEventListener('beforeunload', () => {
+            if (currentUser) {
+                dbPatch(`users/${currentUser.username}`, { status: 'offline', lastSeen: Date.now() });
+            }
+        });
+
+        // ===== ЗАПУСК =====
+        (async function() {
+            const logged = await autoLogin();
+            if (!logged) {
+                loginScreen.style.display = 'flex';
+                chatApp.style.display = 'none';
+            }
+        })();
+    </script>
+</body>
+</html>
