@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>мой Чат</title>
+    <title>Чат</title>
     <style>
         /* ===== ПЕРЕМЕННЫЕ ТЕМЫ ===== */
         :root {
@@ -52,11 +52,12 @@
         .top-bar { display: flex; align-items: center; padding: 10px 16px; background: var(--bg2); border-bottom: 1px solid var(--border); gap: 12px; flex-shrink: 0; }
         .top-bar .menu-btn { background: none; border: none; color: var(--text); font-size: 24px; cursor: pointer; }
         .top-bar .title { flex: 1; font-weight: 600; font-size: 18px; }
+        .top-bar .screen-size { font-size: 13px; color: var(--text2); white-space: nowrap; margin-right: 8px; }
         .top-bar .settings-btn { background: none; border: none; color: var(--text); font-size: 22px; cursor: pointer; }
 
         .app-layout { display: flex; flex: 1; overflow: hidden; position: relative; }
 
-        /* ===== САЙДБАР (список чатов) ===== */
+        /* ===== САЙДБАР ===== */
         .sidebar {
             width: 320px;
             background: var(--bg2);
@@ -106,7 +107,7 @@
         .msg .del:hover { opacity: 1; }
         .msg img { max-width: 200px; max-height: 150px; border-radius: 10px; margin-top: 4px; display: block; }
 
-        /* ===== НИЖНЯЯ ПАНЕЛЬ ВВОДА ===== */
+        /* ===== ВВОД ===== */
         .input-area {
             padding: 8px 12px;
             border-top: 1px solid var(--border);
@@ -165,7 +166,7 @@
         .modal .btn { width: 100%; padding: 12px; border: none; border-radius: 20px; background: var(--avatar-bg); color: #fff; font-weight: 600; cursor: pointer; }
         .modal .btn-close { background: transparent; color: var(--text2); margin-top: 8px; }
 
-        /* ===== НАСТРОЙКИ (с отображением размеров экрана) ===== */
+        /* ===== НАСТРОЙКИ ===== */
         .settings-panel { display: none; position: fixed; inset: 0; background: var(--bg); z-index: 999; padding: 20px; flex-direction: column; gap: 16px; overflow-y: auto; }
         .settings-panel.open { display: flex; }
         .settings-panel .back { background: none; border: none; color: var(--text); font-size: 24px; cursor: pointer; align-self: flex-start; }
@@ -174,10 +175,9 @@
         .settings-panel .theme-toggle { display: flex; gap: 12px; margin: 8px 0; }
         .settings-panel .theme-toggle button { flex: 1; padding: 10px; border: 2px solid var(--border); border-radius: 20px; background: transparent; color: var(--text); cursor: pointer; font-weight: 500; }
         .settings-panel .theme-toggle button.active { border-color: var(--avatar-bg); background: var(--bg-hover); }
-        .settings-panel .screen-size { background: var(--bg3); padding: 10px; border-radius: 12px; font-size: 14px; color: var(--text2); text-align: center; border: 1px solid var(--border); }
         .settings-panel .logout-btn { background: #e74c3c; color: #fff; border: none; padding: 12px; border-radius: 20px; font-weight: 600; cursor: pointer; }
 
-        /* ===== ТОСТ-УВЕДОМЛЕНИЯ ===== */
+        /* ===== ТОСТ ===== */
         .toast-container {
             position: fixed;
             bottom: 80px;
@@ -199,7 +199,7 @@
             to { opacity: 1; transform: translateX(-50%) translateY(0); }
         }
 
-        /* ===== АДАПТИВ ДЛЯ ТЕЛЕФОНОВ ===== */
+        /* ===== АДАПТИВ ===== */
         @media (max-width: 700px) {
             .sidebar {
                 position: absolute;
@@ -213,21 +213,15 @@
                 background: var(--bg2);
                 box-shadow: 4px 0 20px rgba(0,0,0,0.3);
             }
-            .sidebar.open {
-                transform: translateX(0);
-            }
-            .chat-panel.shifted {
-                opacity: 0.3;
-                pointer-events: none;
-            }
-            .chat-panel {
-                width: 100%;
-            }
+            .sidebar.open { transform: translateX(0); }
+            .chat-panel.shifted { opacity: 0.3; pointer-events: none; }
+            .chat-panel { width: 100%; }
             .sticker-grid { grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); }
             .input-area { padding: 6px 10px; gap: 4px; }
             .input-area input[type="text"] { font-size: 14px; padding: 8px 12px; }
             .input-area .btn { padding: 6px 12px; font-size: 13px; }
             .top-bar .menu-btn { display: block; }
+            .top-bar .screen-size { font-size: 11px; }
         }
         @media (min-width: 701px) {
             .sidebar { position: relative; transform: none !important; }
@@ -255,6 +249,7 @@
         <div class="top-bar">
             <button class="menu-btn" id="menuBtn">☰</button>
             <span class="title" id="topTitle">Чаты</span>
+            <span class="screen-size" id="screenSizeDisplay">📐 0×0 px</span>
             <button class="settings-btn" id="settingsBtn">⚙️</button>
         </div>
         <div class="app-layout">
@@ -321,7 +316,7 @@
         </div>
     </div>
 
-    <!-- НАСТРОЙКИ С ОТОБРАЖЕНИЕМ РАЗМЕРОВ ЭКРАНА -->
+    <!-- НАСТРОЙКИ (здесь тоже дублируем размеры) -->
     <div class="settings-panel" id="settingsPanel">
         <button class="back" id="settingsBack">← Назад</button>
         <h2>Настройки</h2>
@@ -332,8 +327,8 @@
             <button data-theme="dark" id="themeDark">🌙 Тёмная</button>
             <button data-theme="light" id="themeLight">☀️ Светлая</button>
         </div>
-        <div class="screen-size" id="screenSizeDisplay">
-            Размер окна: <span id="screenWidth">0</span> × <span id="screenHeight">0</span> px
+        <div style="background:var(--bg3); padding:10px; border-radius:12px; font-size:14px; color:var(--text2); text-align:center; border:1px solid var(--border);">
+            Размер окна: <span id="settingsScreenWidth">0</span> × <span id="settingsScreenHeight">0</span> px
         </div>
         <button class="logout-btn" id="settingsLogout">Выйти</button>
     </div>
@@ -376,8 +371,9 @@
         const themeDark = $('themeDark');
         const themeLight = $('themeLight');
         const settingsLogout = $('settingsLogout');
-        const screenWidth = $('screenWidth');
-        const screenHeight = $('screenHeight');
+        const screenSizeDisplay = $('screenSizeDisplay');
+        const settingsScreenWidth = $('settingsScreenWidth');
+        const settingsScreenHeight = $('settingsScreenHeight');
         const addContactBtn = $('addContactBtn');
         const addContactModal = $('addContactModal');
         const contactInput = $('contactInput');
@@ -844,14 +840,21 @@
         }
 
         // ============================================================
-        // НАСТРОЙКИ И РАЗМЕРЫ ЭКРАНА
+        // РАЗМЕРЫ ЭКРАНА
         // ============================================================
         function updateScreenSize() {
-            screenWidth.textContent = window.innerWidth;
-            screenHeight.textContent = window.innerHeight;
+            const w = window.innerWidth;
+            const h = window.innerHeight;
+            const text = `📐 ${w}×${h} px`;
+            screenSizeDisplay.textContent = text;
+            if (settingsScreenWidth) settingsScreenWidth.textContent = w;
+            if (settingsScreenHeight) settingsScreenHeight.textContent = h;
         }
         window.addEventListener('resize', updateScreenSize);
 
+        // ============================================================
+        // НАСТРОЙКИ
+        // ============================================================
         function applyTheme(theme) {
             document.documentElement.setAttribute('data-theme', theme);
             localStorage.setItem('chat_theme', theme);
@@ -924,7 +927,7 @@
             renderChatList();
             updatePanelHeader(currentChat);
             startPolling();
-            updateScreenSize(); // первое обновление размеров
+            updateScreenSize(); // первое обновление
 
             // Обработчики
             sendBtn.addEventListener('click', () => sendMessage(messageInput.value));
@@ -963,7 +966,7 @@
             settingsBtn.addEventListener('click', () => {
                 settingsPanel.classList.add('open');
                 avatarUrlInput.value = currentUser.avatar || '';
-                updateScreenSize(); // обновить при открытии
+                updateScreenSize();
             });
             settingsBack.addEventListener('click', () => settingsPanel.classList.remove('open'));
             avatarUrlInput.addEventListener('change', async () => {
