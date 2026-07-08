@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>мой Чат</title>
+    <title>Чат</title>
     <style>
         :root {
             --bg: #0e0e0e;
@@ -36,6 +36,7 @@
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
         body { background: var(--bg); color: var(--text); height: 100vh; overflow: hidden; transition: background .2s; }
 
+        /* ВХОД */
         #loginScreen { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; gap: 14px; padding: 20px; background: var(--bg); }
         #loginScreen h1 { font-size: 32px; color: var(--text); }
         #loginScreen input { width: 300px; max-width: 90%; padding: 14px 18px; border-radius: 40px; border: none; background: var(--bg-input); color: var(--text); font-size: 16px; outline: none; }
@@ -45,16 +46,59 @@
         #loginScreen .remember { display: flex; align-items: center; gap: 8px; color: var(--text2); font-size: 14px; }
         #loginScreen .remember input { width: auto; }
 
+        /* ЧАТ */
         #chatApp { display: none; height: 100vh; background: var(--bg); flex-direction: column; }
-        .top-bar { display: flex; align-items: center; padding: 8px 12px; background: var(--bg2); border-bottom: 1px solid var(--border); gap: 8px; flex-shrink: 0; }
-        .top-bar .menu-btn { background: none; border: none; color: var(--text); font-size: 22px; cursor: pointer; }
-        .top-bar .title { flex: 1; font-weight: 600; font-size: 17px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .top-bar .screen-size { font-size: 12px; color: var(--text2); white-space: nowrap; cursor: pointer; padding: 2px 6px; border-radius: 10px; background: var(--bg3); }
-        .top-bar .screen-size:active { background: var(--bg-hover); }
-        .top-bar .settings-btn { background: none; border: none; color: var(--text); font-size: 20px; cursor: pointer; }
+
+        /* Верхняя панель – максимально компактная */
+        .top-bar {
+            display: flex;
+            align-items: center;
+            padding: 6px 10px;
+            background: var(--bg2);
+            border-bottom: 1px solid var(--border);
+            gap: 6px;
+            flex-shrink: 0;
+        }
+        .top-bar .menu-btn {
+            background: none;
+            border: none;
+            color: var(--text);
+            font-size: 20px;
+            cursor: pointer;
+        }
+        .top-bar .title {
+            flex: 1;
+            font-weight: 600;
+            font-size: 16px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .top-bar .screen-size {
+            font-size: 11px;
+            color: var(--text2);
+            white-space: nowrap;
+            cursor: pointer;
+            padding: 1px 5px;
+            border-radius: 8px;
+            background: var(--bg3);
+            font-variant-numeric: tabular-nums;
+            letter-spacing: -0.5px;
+        }
+        .top-bar .screen-size:active {
+            background: var(--bg-hover);
+        }
+        .top-bar .settings-btn {
+            background: none;
+            border: none;
+            color: var(--text);
+            font-size: 19px;
+            cursor: pointer;
+        }
 
         .app-layout { display: flex; flex: 1; overflow: hidden; position: relative; }
 
+        /* Сайдбар */
         .sidebar {
             width: 300px;
             background: var(--bg2);
@@ -80,6 +124,7 @@
         .chat-item .info .last-msg { font-size: 12px; color: var(--text2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .chat-item .time { font-size: 11px; color: var(--text2); flex-shrink: 0; }
 
+        /* Панель чата */
         .chat-panel {
             flex: 1;
             display: flex;
@@ -103,6 +148,7 @@
         .msg .del:hover { opacity: 1; }
         .msg img { max-width: 160px; max-height: 120px; border-radius: 8px; margin-top: 4px; display: block; }
 
+        /* Ввод */
         .input-area {
             padding: 6px 10px;
             border-top: 1px solid var(--border);
@@ -139,6 +185,7 @@
         .input-area .btn-cat { background: #f59e0b; }
         .input-area .btn-cat:hover { background: #d97706; }
 
+        /* Модалки */
         .sticker-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); align-items: center; justify-content: center; z-index: 2000; }
         .sticker-modal.open { display: flex; }
         .sticker-modal-content { background: var(--bg2); border-radius: 16px; width: 90%; max-width: 500px; max-height: 80vh; padding: 14px; display: flex; flex-direction: column; overflow: hidden; }
@@ -191,6 +238,7 @@
             to { opacity: 1; transform: translateX(-50%) translateY(0); }
         }
 
+        /* ===== АДАПТИВ ДЛЯ ТЕЛЕФОНА ===== */
         @media (max-width: 700px) {
             .sidebar {
                 position: absolute;
@@ -212,9 +260,10 @@
             .input-area input[type="text"] { font-size: 13px; padding: 6px 10px; }
             .input-area .btn { padding: 5px 10px; font-size: 12px; }
             .top-bar .menu-btn { display: block; }
-            .top-bar .screen-size { font-size: 10px; padding: 1px 5px; }
-            .top-bar .title { font-size: 15px; }
-            .top-bar .settings-btn { font-size: 18px; }
+            .top-bar .screen-size { font-size: 8px; padding: 1px 4px; }
+            .top-bar .title { font-size: 14px; }
+            .top-bar .settings-btn { font-size: 17px; }
+            .top-bar { padding: 4px 8px; gap: 4px; }
         }
         @media (min-width: 701px) {
             .sidebar { position: relative; transform: none !important; }
@@ -242,7 +291,7 @@
         <div class="top-bar">
             <button class="menu-btn" id="menuBtn">☰</button>
             <span class="title" id="topTitle">Чаты</span>
-            <span class="screen-size" id="screenSizeDisplay" title="Кликните, чтобы скопировать размеры">📐 0×0</span>
+            <span class="screen-size" id="screenSizeDisplay" title="Клик – скопировать размер">0×0</span>
             <button class="settings-btn" id="settingsBtn">⚙️</button>
         </div>
         <div class="app-layout">
@@ -834,38 +883,33 @@
         function updateScreenSize() {
             const w = window.innerWidth;
             const h = window.innerHeight;
-            const text = `📐 ${w}×${h}`;
-            screenSizeDisplay.textContent = text;
+            screenSizeDisplay.textContent = w + '×' + h;
             if (settingsScreenWidth) settingsScreenWidth.textContent = w;
             if (settingsScreenHeight) settingsScreenHeight.textContent = h;
         }
         window.addEventListener('resize', updateScreenSize);
 
-        // Клик по строке с размерами – копирование в буфер
+        // Клик – копирование в буфер
         screenSizeDisplay.addEventListener('click', () => {
-            const text = screenSizeDisplay.textContent.replace('📐', '').trim();
+            const text = screenSizeDisplay.textContent;
             if (navigator.clipboard) {
                 navigator.clipboard.writeText(text).then(() => {
                     showToast('Скопировано: ' + text);
                 }).catch(() => {
-                    // fallback
-                    const range = document.createRange();
-                    range.selectNode(screenSizeDisplay);
-                    window.getSelection().removeAllRanges();
-                    window.getSelection().addRange(range);
-                    document.execCommand('copy');
-                    showToast('Скопировано: ' + text);
+                    fallbackCopy(text);
                 });
             } else {
-                // fallback
-                const range = document.createRange();
-                range.selectNode(screenSizeDisplay);
-                window.getSelection().removeAllRanges();
-                window.getSelection().addRange(range);
-                document.execCommand('copy');
-                showToast('Скопировано: ' + text);
+                fallbackCopy(text);
             }
         });
+        function fallbackCopy(text) {
+            const range = document.createRange();
+            range.selectNode(screenSizeDisplay);
+            window.getSelection().removeAllRanges();
+            window.getSelection().addRange(range);
+            document.execCommand('copy');
+            showToast('Скопировано: ' + text);
+        }
 
         // ============================================================
         // НАСТРОЙКИ
