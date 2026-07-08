@@ -86,13 +86,50 @@
         .msg .del:hover { opacity: 1; }
         .msg img { max-width: 200px; max-height: 150px; border-radius: 10px; margin-top: 4px; display: block; }
 
-        .input-area { padding: 10px 16px; border-top: 1px solid var(--border); background: var(--bg2); display: flex; gap: 8px; align-items: center; flex-wrap: wrap; flex-shrink: 0; }
-        .input-area input[type="text"] { flex: 1; padding: 10px 14px; border-radius: 20px; border: none; background: var(--bg-input); color: var(--text); font-size: 14px; outline: none; min-width: 100px; }
-        .input-area .btn { padding: 8px 14px; border: none; border-radius: 20px; background: var(--avatar-bg); color: #fff; font-weight: 500; cursor: pointer; }
-        .input-area .btn-cat { background: #f59e0b; }
-        .input-area .btn-add { background: #10b981; }
-        .input-area .add-form { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; width: 100%; }
-        .input-area .add-form input { flex: 1; min-width: 120px; }
+        /* ===== НИЖНЯЯ ПАНЕЛЬ (исправлена для мобильных) ===== */
+        .input-area {
+            padding: 8px 12px;
+            border-top: 1px solid var(--border);
+            background: var(--bg2);
+            display: flex;
+            gap: 6px;
+            align-items: center;
+            flex-shrink: 0;
+            flex-wrap: nowrap; /* запрещаем перенос */
+        }
+        .input-area input[type="text"] {
+            flex: 1;
+            padding: 10px 14px;
+            border-radius: 20px;
+            border: none;
+            background: var(--bg-input);
+            color: var(--text);
+            font-size: 15px;
+            outline: none;
+            min-width: 0; /* разрешаем сжиматься */
+            width: 100%;
+        }
+        .input-area .btn {
+            padding: 8px 14px;
+            border: none;
+            border-radius: 20px;
+            background: var(--avatar-bg);
+            color: #fff;
+            font-weight: 500;
+            cursor: pointer;
+            font-size: 14px;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        .input-area .btn-cat {
+            background: #f59e0b;
+        }
+        .input-area .btn-cat:hover { background: #d97706; }
+
+        /* Скрываем форму добавления стикера из основной строки – она будет в модалке */
+        .input-area .add-form {
+            display: none;
+        }
 
         /* ===== МОДАЛКА СТИКЕРОВ ===== */
         .sticker-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); align-items: center; justify-content: center; z-index: 2000; }
@@ -135,9 +172,38 @@
             .sidebar.open { transform: translateX(0); }
             .chat-panel { width: 100%; }
             .sticker-grid { grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); }
+            /* Уменьшаем отступы и размеры на телефоне */
+            .input-area { padding: 6px 10px; gap: 4px; }
+            .input-area input[type="text"] { font-size: 14px; padding: 8px 12px; }
+            .input-area .btn { padding: 6px 12px; font-size: 13px; }
         }
         @media (min-width: 701px) {
             .sidebar { position: relative; transform: none !important; }
+        }
+
+        /* Стили для уведомлений (всплывающие) */
+        .toast-container {
+            position: fixed;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--bg2);
+            color: var(--text);
+            padding: 10px 20px;
+            border-radius: 40px;
+            box-shadow: 0 4px 12px var(--shadow);
+            z-index: 3000;
+            display: none;
+            font-size: 14px;
+            border: 1px solid var(--border);
+        }
+        .toast-container.show {
+            display: block;
+            animation: slideUp 0.3s ease;
+        }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateX(-50%) translateY(20px); }
+            to { opacity: 1; transform: translateX(-50%) translateY(0); }
         }
     </style>
 </head>
@@ -241,28 +307,30 @@
         <button class="logout-btn" id="settingsLogout">Выйти</button>
     </div>
 
+    <!-- Всплывающее уведомление -->
+    <div class="toast-container" id="toast"></div>
+
     <script>
         // ============================================================
         // КОНФИГ
         // ============================================================
         const DB_URL = 'https://makc-894d6-default-rtdb.firebaseio.com/';
-
-        // 🔑 ВАШ КЛЮЧ GIPHY (предоставлен пользователем)
         const GIPHY_API_KEY = 'd6yTgfwrs03OJkuyfjfPiPmNp4fUDbEY';
-
-        // Больше никаких предустановленных стикеров — оставляем пустой массив.
-        // Пользователи будут добавлять свои через кнопку «Добавить» или через поиск GIPHY.
         const DEFAULT_STICKERS = []; // пусто
 
         let currentUser = null;
         let currentChat = 'global';
         let messages = {};
         let users = {};
-        let stickerList = []; // загружается из базы
+        let stickerList = [];
         let pollInterval = null;
         let isLogin = true;
 
-        // DOM-ссылки
+        // Для уведомлений
+        let lastNotifiedMsgId = null;
+        let isChatFocused = true;
+
+        // DOM
         const $ = id => document.getElementById(id);
         const loginScreen = $('loginScreen');
         const chatApp = $('chatApp');
@@ -302,6 +370,7 @@
         const stickerGrid = $('stickerGrid');
         const closeStickerModal = $('closeStickerModal');
         const stickerTabs = document.querySelectorAll('.sticker-tabs button');
+        const toast = $('toast');
 
         // ============================================================
         // РАБОТА С БАЗОЙ (REST)
@@ -357,14 +426,13 @@
         }
 
         // ============================================================
-        // СТИКЕРЫ (гифки)
+        // СТИКЕРЫ
         // ============================================================
         async function loadStickers() {
             const data = await dbGet('catGifs');
             if (data) {
                 stickerList = Object.values(data);
             } else {
-                // Если в базе нет стикеров, создаём пустой объект (без предустановленных)
                 await dbPut('catGifs', {});
                 stickerList = [];
             }
@@ -378,7 +446,7 @@
         }
 
         // ============================================================
-        // ПОИСК ЧЕРЕЗ GIPHY
+        // ПОИСК GIPHY
         // ============================================================
         async function searchGiphy(query) {
             if (!query.trim()) return [];
@@ -397,7 +465,7 @@
         }
 
         // ============================================================
-        // ПОЛЬЗОВАТЕЛИ И ЧАТЫ
+        // ПОЛЬЗОВАТЕЛИ
         // ============================================================
         async function loadUsers() {
             const data = await dbGet('users');
@@ -466,6 +534,24 @@
             const msgs = await loadMessages(currentChat);
             renderMessages(msgs);
             updateChatLastMsg(currentChat, msgs);
+            // Проверяем новые сообщения для уведомлений
+            if (msgs.length > 0) {
+                const lastMsg = msgs[msgs.length-1];
+                if (lastMsg.id !== lastNotifiedMsgId && !isChatFocused && lastMsg.sender !== currentUser.username) {
+                    showToast(`Новое сообщение от ${lastMsg.sender}: ${lastMsg.text || '🖼️ Стикер'}`);
+                    lastNotifiedMsgId = lastMsg.id;
+                    // запросить разрешение на уведомления
+                    if (Notification.permission === 'default') {
+                        Notification.requestPermission();
+                    }
+                    if (Notification.permission === 'granted') {
+                        new Notification('Новое сообщение', {
+                            body: `${lastMsg.sender}: ${lastMsg.text || '🖼️ Стикер'}`,
+                            icon: 'https://cdn-icons-png.flaticon.com/512/1044/1044342.png'
+                        });
+                    }
+                }
+            }
         }
 
         function updateChatLastMsg(chat, msgs) {
@@ -485,7 +571,7 @@
         }
 
         // ============================================================
-        // ОТПРАВКА СООБЩЕНИЙ
+        // ОТПРАВКА
         // ============================================================
         async function sendMessage(text, imageUrl = null) {
             if (!text && !imageUrl) return;
@@ -616,7 +702,7 @@
         // ============================================================
         // СТИКЕРЫ (модалка)
         // ============================================================
-        let stickerTab = 'saved'; // 'saved' или 'search'
+        let stickerTab = 'saved';
 
         function openStickerModal() {
             stickerModal.classList.add('open');
@@ -637,7 +723,6 @@
         async function renderStickers(tab) {
             stickerGrid.innerHTML = '';
             if (tab === 'saved') {
-                // показать сохранённые стикеры (из базы)
                 if (stickerList.length === 0) {
                     stickerGrid.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:var(--text2); padding:20px;">Нет сохранённых стикеров. Добавьте свой URL или найдите в поиске и сохраните.</div>';
                 } else {
@@ -653,7 +738,6 @@
                         stickerGrid.appendChild(img);
                     });
                 }
-                // кнопка добавления своего URL
                 const addDiv = document.createElement('div');
                 addDiv.style.cssText = 'display:flex; flex-direction:column; gap:4px; align-items:center; justify-content:center; border:2px dashed var(--border); border-radius:10px; padding:8px; cursor:pointer;';
                 addDiv.innerHTML = `<span style="font-size:24px;">➕</span><span style="font-size:12px; color:var(--text2);">Добавить</span>`;
@@ -663,7 +747,6 @@
                 });
                 stickerGrid.appendChild(addDiv);
             } else {
-                // Поиск через GIPHY
                 const query = stickerSearchInput.value.trim() || 'funny cat';
                 const results = await searchGiphy(query);
                 if (results.length === 0) {
@@ -681,7 +764,6 @@
                         sendMessage('', url);
                         closeStickerModalFn();
                     });
-                    // кнопка сохранить
                     const saveBtn = document.createElement('button');
                     saveBtn.textContent = '💾';
                     saveBtn.style.cssText = 'position:absolute; bottom:4px; right:4px; background:rgba(0,0,0,0.6); border:none; border-radius:50%; color:#fff; width:28px; height:28px; cursor:pointer; font-size:14px;';
@@ -697,7 +779,6 @@
             }
         }
 
-        // Обработчики вкладок
         stickerTabs.forEach(btn => {
             btn.addEventListener('click', () => {
                 stickerTab = btn.dataset.tab;
@@ -711,7 +792,19 @@
         });
 
         // ============================================================
-        // НАСТРОЙКИ (тема, аватар)
+        // УВЕДОМЛЕНИЯ (тосты)
+        // ============================================================
+        function showToast(text) {
+            toast.textContent = text;
+            toast.classList.add('show');
+            clearTimeout(toast._timer);
+            toast._timer = setTimeout(() => {
+                toast.classList.remove('show');
+            }, 5000);
+        }
+
+        // ============================================================
+        // НАСТРОЙКИ
         // ============================================================
         function applyTheme(theme) {
             document.documentElement.setAttribute('data-theme', theme);
@@ -755,6 +848,18 @@
                 await dbPatch(`users/${currentUser.username}`, { status: 'online', lastSeen: Date.now() });
             }, 3000);
         }
+
+        // ============================================================
+        // ФОКУС ОКНА (для уведомлений)
+        // ============================================================
+        document.addEventListener('visibilitychange', () => {
+            isChatFocused = document.visibilityState === 'visible';
+            if (isChatFocused) {
+                // при возвращении в чат сбрасываем уведомления
+                lastNotifiedMsgId = null;
+                toast.classList.remove('show');
+            }
+        });
 
         // ============================================================
         // ИНИЦИАЛИЗАЦИЯ
