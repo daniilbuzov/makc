@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Чат</title>
+    <title>мой Чат</title>
     <style>
-        /* ===== ПЕРЕМЕННЫЕ ТЕМЫ ===== */
         :root {
             --bg: #0e0e0e;
             --bg2: #1a1a1a;
@@ -37,7 +36,6 @@
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
         body { background: var(--bg); color: var(--text); height: 100vh; overflow: hidden; transition: background .2s; }
 
-        /* ===== ВХОД ===== */
         #loginScreen { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; gap: 14px; padding: 20px; background: var(--bg); }
         #loginScreen h1 { font-size: 32px; color: var(--text); }
         #loginScreen input { width: 300px; max-width: 90%; padding: 14px 18px; border-radius: 40px; border: none; background: var(--bg-input); color: var(--text); font-size: 16px; outline: none; }
@@ -47,19 +45,18 @@
         #loginScreen .remember { display: flex; align-items: center; gap: 8px; color: var(--text2); font-size: 14px; }
         #loginScreen .remember input { width: auto; }
 
-        /* ===== ОСНОВНОЙ ИНТЕРФЕЙС ===== */
         #chatApp { display: none; height: 100vh; background: var(--bg); flex-direction: column; }
-        .top-bar { display: flex; align-items: center; padding: 10px 16px; background: var(--bg2); border-bottom: 1px solid var(--border); gap: 12px; flex-shrink: 0; }
-        .top-bar .menu-btn { background: none; border: none; color: var(--text); font-size: 24px; cursor: pointer; }
-        .top-bar .title { flex: 1; font-weight: 600; font-size: 18px; }
-        .top-bar .screen-size { font-size: 13px; color: var(--text2); white-space: nowrap; margin-right: 8px; }
-        .top-bar .settings-btn { background: none; border: none; color: var(--text); font-size: 22px; cursor: pointer; }
+        .top-bar { display: flex; align-items: center; padding: 8px 12px; background: var(--bg2); border-bottom: 1px solid var(--border); gap: 8px; flex-shrink: 0; }
+        .top-bar .menu-btn { background: none; border: none; color: var(--text); font-size: 22px; cursor: pointer; }
+        .top-bar .title { flex: 1; font-weight: 600; font-size: 17px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .top-bar .screen-size { font-size: 12px; color: var(--text2); white-space: nowrap; cursor: pointer; padding: 2px 6px; border-radius: 10px; background: var(--bg3); }
+        .top-bar .screen-size:active { background: var(--bg-hover); }
+        .top-bar .settings-btn { background: none; border: none; color: var(--text); font-size: 20px; cursor: pointer; }
 
         .app-layout { display: flex; flex: 1; overflow: hidden; position: relative; }
 
-        /* ===== САЙДБАР ===== */
         .sidebar {
-            width: 320px;
+            width: 300px;
             background: var(--bg2);
             border-right: 1px solid var(--border);
             display: flex;
@@ -69,21 +66,20 @@
             transition: transform .25s ease;
             z-index: 10;
         }
-        .sidebar-header { padding: 12px 16px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
-        .sidebar-header h2 { font-size: 18px; }
-        .sidebar-header .add-btn { background: none; border: none; color: var(--avatar-bg); font-size: 24px; cursor: pointer; }
-        .chat-list { flex: 1; overflow-y: auto; padding: 8px 0; }
-        .chat-item { display: flex; align-items: center; gap: 12px; padding: 10px 16px; cursor: pointer; border-left: 3px solid transparent; }
+        .sidebar-header { padding: 10px 16px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .sidebar-header h2 { font-size: 17px; }
+        .sidebar-header .add-btn { background: none; border: none; color: var(--avatar-bg); font-size: 22px; cursor: pointer; }
+        .chat-list { flex: 1; overflow-y: auto; padding: 6px 0; }
+        .chat-item { display: flex; align-items: center; gap: 10px; padding: 8px 14px; cursor: pointer; border-left: 3px solid transparent; }
         .chat-item:hover { background: var(--bg-hover); }
         .chat-item.active { background: var(--bg-hover); border-left-color: var(--avatar-bg); }
-        .chat-item .avatar { width: 42px; height: 42px; border-radius: 50%; background: var(--avatar-bg); display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 18px; color: #fff; flex-shrink: 0; overflow: hidden; }
+        .chat-item .avatar { width: 38px; height: 38px; border-radius: 50%; background: var(--avatar-bg); display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 16px; color: #fff; flex-shrink: 0; overflow: hidden; }
         .chat-item .avatar img { width: 100%; height: 100%; object-fit: cover; }
         .chat-item .info { flex: 1; overflow: hidden; }
-        .chat-item .info .name { font-weight: 500; font-size: 15px; }
-        .chat-item .info .last-msg { font-size: 13px; color: var(--text2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .chat-item .time { font-size: 12px; color: var(--text2); flex-shrink: 0; }
+        .chat-item .info .name { font-weight: 500; font-size: 14px; }
+        .chat-item .info .last-msg { font-size: 12px; color: var(--text2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .chat-item .time { font-size: 11px; color: var(--text2); flex-shrink: 0; }
 
-        /* ===== ПАНЕЛЬ ЧАТА ===== */
         .chat-panel {
             flex: 1;
             display: flex;
@@ -92,105 +88,101 @@
             min-width: 0;
             transition: opacity .2s;
         }
-        .chat-panel-header { padding: 10px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; background: var(--bg2); flex-shrink: 0; }
-        .chat-panel-header .avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--avatar-bg); display: flex; align-items: center; justify-content: center; font-weight: 600; color: #fff; flex-shrink: 0; overflow: hidden; }
+        .chat-panel-header { padding: 8px 14px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; background: var(--bg2); flex-shrink: 0; }
+        .chat-panel-header .avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--avatar-bg); display: flex; align-items: center; justify-content: center; font-weight: 600; color: #fff; flex-shrink: 0; overflow: hidden; }
         .chat-panel-header .avatar img { width: 100%; height: 100%; object-fit: cover; }
-        .chat-panel-header .name { font-weight: 500; font-size: 16px; }
-        .chat-panel-header .status { font-size: 13px; color: var(--text2); }
+        .chat-panel-header .name { font-weight: 500; font-size: 15px; }
+        .chat-panel-header .status { font-size: 12px; color: var(--text2); }
 
-        .messages-area { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 4px; background: var(--bg); }
-        .msg { max-width: 75%; padding: 8px 14px; border-radius: 16px; line-height: 1.4; font-size: 14px; word-wrap: break-word; position: relative; }
+        .messages-area { flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 4px; background: var(--bg); }
+        .msg { max-width: 80%; padding: 6px 12px; border-radius: 14px; line-height: 1.4; font-size: 14px; word-wrap: break-word; position: relative; }
         .msg.self { align-self: flex-end; background: var(--bg-msg-self); color: #fff; border-bottom-right-radius: 4px; }
         .msg.other { align-self: flex-start; background: var(--bg-msg-other); color: var(--text); border-bottom-left-radius: 4px; }
-        .msg .time { font-size: 11px; opacity: 0.6; margin-top: 4px; display: block; }
-        .msg .del { background: none; border: none; color: #f87171; cursor: pointer; font-size: 12px; margin-left: 8px; opacity: 0.5; }
+        .msg .time { font-size: 10px; opacity: 0.6; margin-top: 2px; display: block; }
+        .msg .del { background: none; border: none; color: #f87171; cursor: pointer; font-size: 11px; margin-left: 6px; opacity: 0.5; }
         .msg .del:hover { opacity: 1; }
-        .msg img { max-width: 200px; max-height: 150px; border-radius: 10px; margin-top: 4px; display: block; }
+        .msg img { max-width: 160px; max-height: 120px; border-radius: 8px; margin-top: 4px; display: block; }
 
-        /* ===== ВВОД ===== */
         .input-area {
-            padding: 8px 12px;
+            padding: 6px 10px;
             border-top: 1px solid var(--border);
             background: var(--bg2);
             display: flex;
-            gap: 6px;
+            gap: 5px;
             align-items: center;
             flex-shrink: 0;
             flex-wrap: nowrap;
         }
         .input-area input[type="text"] {
             flex: 1;
-            padding: 10px 14px;
-            border-radius: 20px;
+            padding: 8px 12px;
+            border-radius: 18px;
             border: none;
             background: var(--bg-input);
             color: var(--text);
-            font-size: 15px;
+            font-size: 14px;
             outline: none;
             min-width: 0;
         }
         .input-area .btn {
-            padding: 8px 14px;
+            padding: 6px 12px;
             border: none;
-            border-radius: 20px;
+            border-radius: 18px;
             background: var(--avatar-bg);
             color: #fff;
             font-weight: 500;
             cursor: pointer;
-            font-size: 14px;
+            font-size: 13px;
             white-space: nowrap;
             flex-shrink: 0;
         }
         .input-area .btn-cat { background: #f59e0b; }
         .input-area .btn-cat:hover { background: #d97706; }
 
-        /* ===== МОДАЛКИ ===== */
         .sticker-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); align-items: center; justify-content: center; z-index: 2000; }
         .sticker-modal.open { display: flex; }
-        .sticker-modal-content { background: var(--bg2); border-radius: 20px; width: 90%; max-width: 500px; max-height: 80vh; padding: 16px; display: flex; flex-direction: column; overflow: hidden; }
-        .sticker-modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-        .sticker-modal-header input { flex: 1; padding: 8px 14px; border-radius: 20px; border: 1px solid var(--border); background: var(--bg-input); color: var(--text); font-size: 14px; outline: none; margin-right: 8px; }
-        .sticker-modal-header .close { background: none; border: none; color: var(--text); font-size: 24px; cursor: pointer; }
-        .sticker-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 8px; overflow-y: auto; padding: 8px 0; flex: 1; }
-        .sticker-grid img { width: 100%; aspect-ratio: 1/1; object-fit: cover; border-radius: 10px; cursor: pointer; transition: 0.15s; border: 2px solid transparent; }
+        .sticker-modal-content { background: var(--bg2); border-radius: 16px; width: 90%; max-width: 500px; max-height: 80vh; padding: 14px; display: flex; flex-direction: column; overflow: hidden; }
+        .sticker-modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .sticker-modal-header input { flex: 1; padding: 6px 12px; border-radius: 16px; border: 1px solid var(--border); background: var(--bg-input); color: var(--text); font-size: 13px; outline: none; margin-right: 8px; }
+        .sticker-modal-header .close { background: none; border: none; color: var(--text); font-size: 22px; cursor: pointer; }
+        .sticker-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 6px; overflow-y: auto; padding: 6px 0; flex: 1; }
+        .sticker-grid img { width: 100%; aspect-ratio: 1/1; object-fit: cover; border-radius: 8px; cursor: pointer; transition: 0.15s; border: 2px solid transparent; }
         .sticker-grid img:hover { border-color: var(--avatar-bg); transform: scale(1.02); }
-        .sticker-tabs { display: flex; gap: 8px; margin-bottom: 8px; }
-        .sticker-tabs button { padding: 6px 12px; border: none; border-radius: 20px; background: var(--bg3); color: var(--text); cursor: pointer; font-size: 13px; }
+        .sticker-tabs { display: flex; gap: 6px; margin-bottom: 6px; }
+        .sticker-tabs button { padding: 4px 10px; border: none; border-radius: 14px; background: var(--bg3); color: var(--text); cursor: pointer; font-size: 12px; }
         .sticker-tabs button.active { background: var(--avatar-bg); color: #fff; }
 
         .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 1000; }
         .modal-overlay.open { display: flex; }
-        .modal { background: var(--bg2); padding: 24px; border-radius: 16px; width: 320px; max-width: 90%; }
-        .modal h3 { margin-bottom: 12px; }
-        .modal input { width: 100%; padding: 12px; border-radius: 20px; border: 1px solid var(--border); background: var(--bg-input); color: var(--text); font-size: 16px; outline: none; margin-bottom: 12px; }
-        .modal .btn { width: 100%; padding: 12px; border: none; border-radius: 20px; background: var(--avatar-bg); color: #fff; font-weight: 600; cursor: pointer; }
-        .modal .btn-close { background: transparent; color: var(--text2); margin-top: 8px; }
+        .modal { background: var(--bg2); padding: 20px; border-radius: 14px; width: 300px; max-width: 90%; }
+        .modal h3 { margin-bottom: 10px; }
+        .modal input { width: 100%; padding: 10px; border-radius: 18px; border: 1px solid var(--border); background: var(--bg-input); color: var(--text); font-size: 15px; outline: none; margin-bottom: 10px; }
+        .modal .btn { width: 100%; padding: 10px; border: none; border-radius: 18px; background: var(--avatar-bg); color: #fff; font-weight: 600; cursor: pointer; }
+        .modal .btn-close { background: transparent; color: var(--text2); margin-top: 6px; }
 
-        /* ===== НАСТРОЙКИ ===== */
-        .settings-panel { display: none; position: fixed; inset: 0; background: var(--bg); z-index: 999; padding: 20px; flex-direction: column; gap: 16px; overflow-y: auto; }
+        .settings-panel { display: none; position: fixed; inset: 0; background: var(--bg); z-index: 999; padding: 20px; flex-direction: column; gap: 14px; overflow-y: auto; }
         .settings-panel.open { display: flex; }
-        .settings-panel .back { background: none; border: none; color: var(--text); font-size: 24px; cursor: pointer; align-self: flex-start; }
+        .settings-panel .back { background: none; border: none; color: var(--text); font-size: 22px; cursor: pointer; align-self: flex-start; }
         .settings-panel label { font-weight: 500; }
-        .settings-panel input { padding: 10px; border-radius: 20px; border: 1px solid var(--border); background: var(--bg-input); color: var(--text); font-size: 14px; outline: none; }
-        .settings-panel .theme-toggle { display: flex; gap: 12px; margin: 8px 0; }
-        .settings-panel .theme-toggle button { flex: 1; padding: 10px; border: 2px solid var(--border); border-radius: 20px; background: transparent; color: var(--text); cursor: pointer; font-weight: 500; }
+        .settings-panel input { padding: 8px 12px; border-radius: 16px; border: 1px solid var(--border); background: var(--bg-input); color: var(--text); font-size: 14px; outline: none; }
+        .settings-panel .theme-toggle { display: flex; gap: 10px; margin: 6px 0; }
+        .settings-panel .theme-toggle button { flex: 1; padding: 8px; border: 2px solid var(--border); border-radius: 16px; background: transparent; color: var(--text); cursor: pointer; font-weight: 500; font-size: 14px; }
         .settings-panel .theme-toggle button.active { border-color: var(--avatar-bg); background: var(--bg-hover); }
-        .settings-panel .logout-btn { background: #e74c3c; color: #fff; border: none; padding: 12px; border-radius: 20px; font-weight: 600; cursor: pointer; }
+        .settings-panel .logout-btn { background: #e74c3c; color: #fff; border: none; padding: 10px; border-radius: 16px; font-weight: 600; cursor: pointer; }
 
-        /* ===== ТОСТ ===== */
         .toast-container {
             position: fixed;
-            bottom: 80px;
+            bottom: 70px;
             left: 50%;
             transform: translateX(-50%);
             background: var(--bg2);
             color: var(--text);
-            padding: 10px 20px;
-            border-radius: 40px;
+            padding: 8px 16px;
+            border-radius: 30px;
             box-shadow: 0 4px 12px var(--shadow);
             z-index: 3000;
             display: none;
-            font-size: 14px;
+            font-size: 13px;
             border: 1px solid var(--border);
         }
         .toast-container.show { display: block; animation: slideUp 0.3s ease; }
@@ -199,14 +191,13 @@
             to { opacity: 1; transform: translateX(-50%) translateY(0); }
         }
 
-        /* ===== АДАПТИВ ===== */
         @media (max-width: 700px) {
             .sidebar {
                 position: absolute;
                 top: 0;
                 left: 0;
                 bottom: 0;
-                width: 280px;
+                width: 260px;
                 transform: translateX(-100%);
                 z-index: 20;
                 border-right: 1px solid var(--border);
@@ -216,12 +207,14 @@
             .sidebar.open { transform: translateX(0); }
             .chat-panel.shifted { opacity: 0.3; pointer-events: none; }
             .chat-panel { width: 100%; }
-            .sticker-grid { grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); }
-            .input-area { padding: 6px 10px; gap: 4px; }
-            .input-area input[type="text"] { font-size: 14px; padding: 8px 12px; }
-            .input-area .btn { padding: 6px 12px; font-size: 13px; }
+            .sticker-grid { grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); }
+            .input-area { padding: 4px 8px; gap: 4px; }
+            .input-area input[type="text"] { font-size: 13px; padding: 6px 10px; }
+            .input-area .btn { padding: 5px 10px; font-size: 12px; }
             .top-bar .menu-btn { display: block; }
-            .top-bar .screen-size { font-size: 11px; }
+            .top-bar .screen-size { font-size: 10px; padding: 1px 5px; }
+            .top-bar .title { font-size: 15px; }
+            .top-bar .settings-btn { font-size: 18px; }
         }
         @media (min-width: 701px) {
             .sidebar { position: relative; transform: none !important; }
@@ -249,11 +242,10 @@
         <div class="top-bar">
             <button class="menu-btn" id="menuBtn">☰</button>
             <span class="title" id="topTitle">Чаты</span>
-            <span class="screen-size" id="screenSizeDisplay">📐 0×0 px</span>
+            <span class="screen-size" id="screenSizeDisplay" title="Кликните, чтобы скопировать размеры">📐 0×0</span>
             <button class="settings-btn" id="settingsBtn">⚙️</button>
         </div>
         <div class="app-layout">
-            <!-- Сайдбар -->
             <div class="sidebar" id="sidebar">
                 <div class="sidebar-header">
                     <h2>Чаты</h2>
@@ -270,8 +262,6 @@
                     </div>
                 </div>
             </div>
-
-            <!-- Панель чата -->
             <div class="chat-panel" id="chatPanel">
                 <div class="chat-panel-header">
                     <div class="avatar" id="panelAvatar">🌍</div>
@@ -316,7 +306,6 @@
         </div>
     </div>
 
-    <!-- НАСТРОЙКИ (здесь тоже дублируем размеры) -->
     <div class="settings-panel" id="settingsPanel">
         <button class="back" id="settingsBack">← Назад</button>
         <h2>Настройки</h2>
@@ -327,7 +316,7 @@
             <button data-theme="dark" id="themeDark">🌙 Тёмная</button>
             <button data-theme="light" id="themeLight">☀️ Светлая</button>
         </div>
-        <div style="background:var(--bg3); padding:10px; border-radius:12px; font-size:14px; color:var(--text2); text-align:center; border:1px solid var(--border);">
+        <div style="background:var(--bg3); padding:8px; border-radius:10px; font-size:13px; color:var(--text2); text-align:center; border:1px solid var(--border);">
             Размер окна: <span id="settingsScreenWidth">0</span> × <span id="settingsScreenHeight">0</span> px
         </div>
         <button class="logout-btn" id="settingsLogout">Выйти</button>
@@ -776,8 +765,8 @@
                     });
                 }
                 const addDiv = document.createElement('div');
-                addDiv.style.cssText = 'display:flex; flex-direction:column; gap:4px; align-items:center; justify-content:center; border:2px dashed var(--border); border-radius:10px; padding:8px; cursor:pointer;';
-                addDiv.innerHTML = `<span style="font-size:24px;">➕</span><span style="font-size:12px; color:var(--text2);">Добавить</span>`;
+                addDiv.style.cssText = 'display:flex; flex-direction:column; gap:4px; align-items:center; justify-content:center; border:2px dashed var(--border); border-radius:8px; padding:6px; cursor:pointer;';
+                addDiv.innerHTML = `<span style="font-size:20px;">➕</span><span style="font-size:11px; color:var(--text2);">Добавить</span>`;
                 addDiv.addEventListener('click', () => {
                     const url = prompt('Введите URL картинки/гифки:');
                     if (url) addSticker(url);
@@ -803,7 +792,7 @@
                     });
                     const saveBtn = document.createElement('button');
                     saveBtn.textContent = '💾';
-                    saveBtn.style.cssText = 'position:absolute; bottom:4px; right:4px; background:rgba(0,0,0,0.6); border:none; border-radius:50%; color:#fff; width:28px; height:28px; cursor:pointer; font-size:14px;';
+                    saveBtn.style.cssText = 'position:absolute; bottom:4px; right:4px; background:rgba(0,0,0,0.6); border:none; border-radius:50%; color:#fff; width:26px; height:26px; cursor:pointer; font-size:13px;';
                     saveBtn.addEventListener('click', async (e) => {
                         e.stopPropagation();
                         await addSticker(url);
@@ -845,12 +834,38 @@
         function updateScreenSize() {
             const w = window.innerWidth;
             const h = window.innerHeight;
-            const text = `📐 ${w}×${h} px`;
+            const text = `📐 ${w}×${h}`;
             screenSizeDisplay.textContent = text;
             if (settingsScreenWidth) settingsScreenWidth.textContent = w;
             if (settingsScreenHeight) settingsScreenHeight.textContent = h;
         }
         window.addEventListener('resize', updateScreenSize);
+
+        // Клик по строке с размерами – копирование в буфер
+        screenSizeDisplay.addEventListener('click', () => {
+            const text = screenSizeDisplay.textContent.replace('📐', '').trim();
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(text).then(() => {
+                    showToast('Скопировано: ' + text);
+                }).catch(() => {
+                    // fallback
+                    const range = document.createRange();
+                    range.selectNode(screenSizeDisplay);
+                    window.getSelection().removeAllRanges();
+                    window.getSelection().addRange(range);
+                    document.execCommand('copy');
+                    showToast('Скопировано: ' + text);
+                });
+            } else {
+                // fallback
+                const range = document.createRange();
+                range.selectNode(screenSizeDisplay);
+                window.getSelection().removeAllRanges();
+                window.getSelection().addRange(range);
+                document.execCommand('copy');
+                showToast('Скопировано: ' + text);
+            }
+        });
 
         // ============================================================
         // НАСТРОЙКИ
@@ -927,7 +942,7 @@
             renderChatList();
             updatePanelHeader(currentChat);
             startPolling();
-            updateScreenSize(); // первое обновление
+            updateScreenSize();
 
             // Обработчики
             sendBtn.addEventListener('click', () => sendMessage(messageInput.value));
