@@ -47,15 +47,27 @@
         #loginScreen .remember { display: flex; align-items: center; gap: 8px; color: var(--text2); font-size: 14px; }
         #loginScreen .remember input { width: auto; }
 
-        /* ===== ЧАТ ===== */
+        /* ===== ОСНОВНОЙ ИНТЕРФЕЙС ===== */
         #chatApp { display: none; height: 100vh; background: var(--bg); flex-direction: column; }
         .top-bar { display: flex; align-items: center; padding: 10px 16px; background: var(--bg2); border-bottom: 1px solid var(--border); gap: 12px; flex-shrink: 0; }
-        .top-bar .menu-btn { background: none; border: none; color: var(--text); font-size: 24px; cursor: pointer; display: none; }
+        .top-bar .menu-btn { background: none; border: none; color: var(--text); font-size: 24px; cursor: pointer; }
         .top-bar .title { flex: 1; font-weight: 600; font-size: 18px; }
         .top-bar .settings-btn { background: none; border: none; color: var(--text); font-size: 22px; cursor: pointer; }
 
-        .app-layout { display: flex; flex: 1; overflow: hidden; }
-        .sidebar { width: 320px; background: var(--bg2); border-right: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; transition: transform .25s; overflow: hidden; }
+        .app-layout { display: flex; flex: 1; overflow: hidden; position: relative; }
+
+        /* ===== САЙДБАР (список чатов) ===== */
+        .sidebar {
+            width: 320px;
+            background: var(--bg2);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            overflow: hidden;
+            transition: transform .25s ease;
+            z-index: 10;
+        }
         .sidebar-header { padding: 12px 16px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
         .sidebar-header h2 { font-size: 18px; }
         .sidebar-header .add-btn { background: none; border: none; color: var(--avatar-bg); font-size: 24px; cursor: pointer; }
@@ -70,7 +82,15 @@
         .chat-item .info .last-msg { font-size: 13px; color: var(--text2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .chat-item .time { font-size: 12px; color: var(--text2); flex-shrink: 0; }
 
-        .chat-panel { flex: 1; display: flex; flex-direction: column; background: var(--bg); min-width: 0; }
+        /* ===== ПАНЕЛЬ ЧАТА ===== */
+        .chat-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: var(--bg);
+            min-width: 0;
+            transition: opacity .2s;
+        }
         .chat-panel-header { padding: 10px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; background: var(--bg2); flex-shrink: 0; }
         .chat-panel-header .avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--avatar-bg); display: flex; align-items: center; justify-content: center; font-weight: 600; color: #fff; flex-shrink: 0; overflow: hidden; }
         .chat-panel-header .avatar img { width: 100%; height: 100%; object-fit: cover; }
@@ -86,7 +106,7 @@
         .msg .del:hover { opacity: 1; }
         .msg img { max-width: 200px; max-height: 150px; border-radius: 10px; margin-top: 4px; display: block; }
 
-        /* ===== НИЖНЯЯ ПАНЕЛЬ (исправлена для мобильных) ===== */
+        /* ===== НИЖНЯЯ ПАНЕЛЬ ВВОДА ===== */
         .input-area {
             padding: 8px 12px;
             border-top: 1px solid var(--border);
@@ -95,7 +115,7 @@
             gap: 6px;
             align-items: center;
             flex-shrink: 0;
-            flex-wrap: nowrap; /* запрещаем перенос */
+            flex-wrap: nowrap;
         }
         .input-area input[type="text"] {
             flex: 1;
@@ -106,8 +126,7 @@
             color: var(--text);
             font-size: 15px;
             outline: none;
-            min-width: 0; /* разрешаем сжиматься */
-            width: 100%;
+            min-width: 0;
         }
         .input-area .btn {
             padding: 8px 14px;
@@ -121,17 +140,10 @@
             white-space: nowrap;
             flex-shrink: 0;
         }
-        .input-area .btn-cat {
-            background: #f59e0b;
-        }
+        .input-area .btn-cat { background: #f59e0b; }
         .input-area .btn-cat:hover { background: #d97706; }
 
-        /* Скрываем форму добавления стикера из основной строки – она будет в модалке */
-        .input-area .add-form {
-            display: none;
-        }
-
-        /* ===== МОДАЛКА СТИКЕРОВ ===== */
+        /* ===== МОДАЛКИ ===== */
         .sticker-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); align-items: center; justify-content: center; z-index: 2000; }
         .sticker-modal.open { display: flex; }
         .sticker-modal-content { background: var(--bg2); border-radius: 20px; width: 90%; max-width: 500px; max-height: 80vh; padding: 16px; display: flex; flex-direction: column; overflow: hidden; }
@@ -145,7 +157,6 @@
         .sticker-tabs button { padding: 6px 12px; border: none; border-radius: 20px; background: var(--bg3); color: var(--text); cursor: pointer; font-size: 13px; }
         .sticker-tabs button.active { background: var(--avatar-bg); color: #fff; }
 
-        /* ===== МОДАЛКА КОНТАКТА ===== */
         .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 1000; }
         .modal-overlay.open { display: flex; }
         .modal { background: var(--bg2); padding: 24px; border-radius: 16px; width: 320px; max-width: 90%; }
@@ -154,7 +165,6 @@
         .modal .btn { width: 100%; padding: 12px; border: none; border-radius: 20px; background: var(--avatar-bg); color: #fff; font-weight: 600; cursor: pointer; }
         .modal .btn-close { background: transparent; color: var(--text2); margin-top: 8px; }
 
-        /* ===== НАСТРОЙКИ ===== */
         .settings-panel { display: none; position: fixed; inset: 0; background: var(--bg); z-index: 999; padding: 20px; flex-direction: column; gap: 16px; overflow-y: auto; }
         .settings-panel.open { display: flex; }
         .settings-panel .back { background: none; border: none; color: var(--text); font-size: 24px; cursor: pointer; align-self: flex-start; }
@@ -165,23 +175,7 @@
         .settings-panel .theme-toggle button.active { border-color: var(--avatar-bg); background: var(--bg-hover); }
         .settings-panel .logout-btn { background: #e74c3c; color: #fff; border: none; padding: 12px; border-radius: 20px; font-weight: 600; cursor: pointer; }
 
-        /* ===== АДАПТИВ ===== */
-        @media (max-width: 700px) {
-            .top-bar .menu-btn { display: block; }
-            .sidebar { position: fixed; top: 56px; left: 0; bottom: 0; width: 280px; transform: translateX(-100%); z-index: 100; background: var(--bg2); border-right: 1px solid var(--border); }
-            .sidebar.open { transform: translateX(0); }
-            .chat-panel { width: 100%; }
-            .sticker-grid { grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); }
-            /* Уменьшаем отступы и размеры на телефоне */
-            .input-area { padding: 6px 10px; gap: 4px; }
-            .input-area input[type="text"] { font-size: 14px; padding: 8px 12px; }
-            .input-area .btn { padding: 6px 12px; font-size: 13px; }
-        }
-        @media (min-width: 701px) {
-            .sidebar { position: relative; transform: none !important; }
-        }
-
-        /* Стили для уведомлений (всплывающие) */
+        /* ===== ТОСТ-УВЕДОМЛЕНИЯ ===== */
         .toast-container {
             position: fixed;
             bottom: 80px;
@@ -197,13 +191,47 @@
             font-size: 14px;
             border: 1px solid var(--border);
         }
-        .toast-container.show {
-            display: block;
-            animation: slideUp 0.3s ease;
-        }
+        .toast-container.show { display: block; animation: slideUp 0.3s ease; }
         @keyframes slideUp {
             from { opacity: 0; transform: translateX(-50%) translateY(20px); }
             to { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+
+        /* ===== АДАПТИВ ДЛЯ ТЕЛЕФОНОВ ===== */
+        @media (max-width: 700px) {
+            .sidebar {
+                position: absolute;
+                top: 0;
+                left: 0;
+                bottom: 0;
+                width: 280px;
+                transform: translateX(-100%);
+                z-index: 20;
+                border-right: 1px solid var(--border);
+                background: var(--bg2);
+                box-shadow: 4px 0 20px rgba(0,0,0,0.3);
+            }
+            .sidebar.open {
+                transform: translateX(0);
+            }
+            /* Затемняем фон чата при открытом сайдбаре */
+            .chat-panel.shifted {
+                opacity: 0.3;
+                pointer-events: none;
+            }
+            .chat-panel {
+                width: 100%;
+            }
+            .sticker-grid { grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); }
+            .input-area { padding: 6px 10px; gap: 4px; }
+            .input-area input[type="text"] { font-size: 14px; padding: 8px 12px; }
+            .input-area .btn { padding: 6px 12px; font-size: 13px; }
+            /* Убираем лишние отступы */
+            .top-bar .menu-btn { display: block; }
+        }
+        @media (min-width: 701px) {
+            .sidebar { position: relative; transform: none !important; }
+            .chat-panel.shifted { opacity: 1; pointer-events: auto; }
         }
     </style>
 </head>
@@ -230,6 +258,7 @@
             <button class="settings-btn" id="settingsBtn">⚙️</button>
         </div>
         <div class="app-layout">
+            <!-- Сайдбар -->
             <div class="sidebar" id="sidebar">
                 <div class="sidebar-header">
                     <h2>Чаты</h2>
@@ -246,6 +275,8 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Панель чата -->
             <div class="chat-panel" id="chatPanel">
                 <div class="chat-panel-header">
                     <div class="avatar" id="panelAvatar">🌍</div>
@@ -266,7 +297,7 @@
         </div>
     </div>
 
-    <!-- МОДАЛКА ДОБАВЛЕНИЯ КОНТАКТА -->
+    <!-- МОДАЛКИ -->
     <div class="modal-overlay" id="addContactModal">
         <div class="modal">
             <h3>Добавить контакт</h3>
@@ -276,7 +307,6 @@
         </div>
     </div>
 
-    <!-- МОДАЛКА СТИКЕРОВ -->
     <div class="sticker-modal" id="stickerModal">
         <div class="sticker-modal-content">
             <div class="sticker-modal-header">
@@ -287,13 +317,10 @@
                 <button class="active" data-tab="saved">📁 Мои</button>
                 <button data-tab="search">🔍 Поиск</button>
             </div>
-            <div class="sticker-grid" id="stickerGrid">
-                <!-- сюда будут загружаться гифки -->
-            </div>
+            <div class="sticker-grid" id="stickerGrid"></div>
         </div>
     </div>
 
-    <!-- НАСТРОЙКИ -->
     <div class="settings-panel" id="settingsPanel">
         <button class="back" id="settingsBack">← Назад</button>
         <h2>Настройки</h2>
@@ -307,7 +334,6 @@
         <button class="logout-btn" id="settingsLogout">Выйти</button>
     </div>
 
-    <!-- Всплывающее уведомление -->
     <div class="toast-container" id="toast"></div>
 
     <script>
@@ -316,7 +342,7 @@
         // ============================================================
         const DB_URL = 'https://makc-894d6-default-rtdb.firebaseio.com/';
         const GIPHY_API_KEY = 'd6yTgfwrs03OJkuyfjfPiPmNp4fUDbEY';
-        const DEFAULT_STICKERS = []; // пусто
+        const DEFAULT_STICKERS = [];
 
         let currentUser = null;
         let currentChat = 'global';
@@ -325,8 +351,6 @@
         let stickerList = [];
         let pollInterval = null;
         let isLogin = true;
-
-        // Для уведомлений
         let lastNotifiedMsgId = null;
         let isChatFocused = true;
 
@@ -365,6 +389,7 @@
         const sendBtn = $('sendBtn');
         const catBtn = $('catBtn');
         const sidebar = $('sidebar');
+        const chatPanel = $('chatPanel');
         const stickerModal = $('stickerModal');
         const stickerSearchInput = $('stickerSearchInput');
         const stickerGrid = $('stickerGrid');
@@ -373,7 +398,7 @@
         const toast = $('toast');
 
         // ============================================================
-        // РАБОТА С БАЗОЙ (REST)
+        // РАБОТА С БАЗОЙ
         // ============================================================
         async function dbGet(path) {
             const r = await fetch(DB_URL + path + '.json');
@@ -446,7 +471,7 @@
         }
 
         // ============================================================
-        // ПОИСК GIPHY
+        // GIPHY
         // ============================================================
         async function searchGiphy(query) {
             if (!query.trim()) return [];
@@ -515,7 +540,6 @@
                 div.innerHTML = content + `<span class="time">${timeStr(msg.timestamp)}</span>` + del;
                 messagesArea.appendChild(div);
             });
-            // Удаление
             messagesArea.querySelectorAll('.del').forEach(btn => {
                 btn.addEventListener('click', async (e) => {
                     const chat = btn.dataset.chat;
@@ -534,16 +558,12 @@
             const msgs = await loadMessages(currentChat);
             renderMessages(msgs);
             updateChatLastMsg(currentChat, msgs);
-            // Проверяем новые сообщения для уведомлений
             if (msgs.length > 0) {
                 const lastMsg = msgs[msgs.length-1];
                 if (lastMsg.id !== lastNotifiedMsgId && !isChatFocused && lastMsg.sender !== currentUser.username) {
-                    showToast(`Новое сообщение от ${lastMsg.sender}: ${lastMsg.text || '🖼️ Стикер'}`);
+                    showToast(`Новое от ${lastMsg.sender}: ${lastMsg.text || '🖼️'}`);
                     lastNotifiedMsgId = lastMsg.id;
-                    // запросить разрешение на уведомления
-                    if (Notification.permission === 'default') {
-                        Notification.requestPermission();
-                    }
+                    if (Notification.permission === 'default') Notification.requestPermission();
                     if (Notification.permission === 'granted') {
                         new Notification('Новое сообщение', {
                             body: `${lastMsg.sender}: ${lastMsg.text || '🖼️ Стикер'}`,
@@ -642,7 +662,7 @@
                     refreshCurrentChat();
                     renderChatList();
                     updatePanelHeader(uname);
-                    if (window.innerWidth <= 700) sidebar.classList.remove('open');
+                    closeSidebar(); // закрываем сайдбар на телефоне
                 });
                 chatList.appendChild(div);
             });
@@ -674,6 +694,25 @@
         }
 
         // ============================================================
+        // УПРАВЛЕНИЕ САЙДБАРОМ (телефон)
+        // ============================================================
+        function openSidebar() {
+            sidebar.classList.add('open');
+            chatPanel.classList.add('shifted');
+        }
+        function closeSidebar() {
+            sidebar.classList.remove('open');
+            chatPanel.classList.remove('shifted');
+        }
+        function toggleSidebar() {
+            if (sidebar.classList.contains('open')) {
+                closeSidebar();
+            } else {
+                openSidebar();
+            }
+        }
+
+        // ============================================================
         // ДОБАВЛЕНИЕ КОНТАКТА
         // ============================================================
         function openAddContact() {
@@ -696,7 +735,7 @@
             refreshCurrentChat();
             renderChatList();
             updatePanelHeader(username);
-            if (window.innerWidth <= 700) sidebar.classList.remove('open');
+            closeSidebar();
         }
 
         // ============================================================
@@ -711,11 +750,7 @@
             updateStickerTabs();
             renderStickers('saved');
         }
-
-        function closeStickerModalFn() {
-            stickerModal.classList.remove('open');
-        }
-
+        function closeStickerModalFn() { stickerModal.classList.remove('open'); }
         function updateStickerTabs() {
             stickerTabs.forEach(btn => btn.classList.toggle('active', btn.dataset.tab === stickerTab));
         }
@@ -786,13 +821,12 @@
                 renderStickers(stickerTab);
             });
         });
-
         stickerSearchInput.addEventListener('input', () => {
             if (stickerTab === 'search') renderStickers('search');
         });
 
         // ============================================================
-        // УВЕДОМЛЕНИЯ (тосты)
+        // УВЕДОМЛЕНИЯ
         // ============================================================
         function showToast(text) {
             toast.textContent = text;
@@ -850,12 +884,11 @@
         }
 
         // ============================================================
-        // ФОКУС ОКНА (для уведомлений)
+        // ФОКУС ОКНА
         // ============================================================
         document.addEventListener('visibilitychange', () => {
             isChatFocused = document.visibilityState === 'visible';
             if (isChatFocused) {
-                // при возвращении в чат сбрасываем уведомления
                 lastNotifiedMsgId = null;
                 toast.classList.remove('show');
             }
@@ -889,21 +922,24 @@
                 if (e.target === stickerModal) closeStickerModalFn();
             });
 
+            menuBtn.addEventListener('click', toggleSidebar);
+
+            // Клик по глобальному чату
             chatGlobal.addEventListener('click', () => {
                 if (currentChat === 'global') return;
                 currentChat = 'global';
                 refreshCurrentChat();
                 renderChatList();
                 updatePanelHeader('global');
-                if (window.innerWidth <= 700) sidebar.classList.remove('open');
+                closeSidebar();
                 localStorage.setItem('chat_current', 'global');
             });
 
-            menuBtn.addEventListener('click', () => sidebar.classList.toggle('open'));
+            // Закрытие сайдбара при клике вне него (на телефоне)
             document.addEventListener('click', (e) => {
                 if (window.innerWidth <= 700 && sidebar.classList.contains('open')) {
                     if (!sidebar.contains(e.target) && e.target !== menuBtn) {
-                        sidebar.classList.remove('open');
+                        closeSidebar();
                     }
                 }
             });
