@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>мой Чат</title>
+    <title>Чат</title>
     <style>
         :root {
             --bg: #0e0e0e;
@@ -47,7 +47,6 @@
 
         #chatApp { display: none; height: 100vh; background: var(--bg); flex-direction: column; }
 
-        /* Верхняя панель – гарантированно видимая */
         .top-bar {
             display: flex;
             align-items: center;
@@ -56,7 +55,7 @@
             border-bottom: 1px solid var(--border);
             gap: 8px;
             flex-shrink: 0;
-            z-index: 30; /* поверх сайдбара */
+            z-index: 30;
             position: relative;
         }
         .top-bar .menu-btn {
@@ -77,18 +76,17 @@
             min-width: 0;
         }
         .top-bar .screen-size {
-            font-size: 13px;
-            color: var(--text2);
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text);
+            background: var(--bg3);
+            padding: 2px 10px;
+            border-radius: 16px;
+            border: 1px solid var(--border);
             white-space: nowrap;
             cursor: pointer;
-            padding: 2px 8px;
-            border-radius: 12px;
-            background: var(--bg3);
-            font-variant-numeric: tabular-nums;
-            letter-spacing: -0.2px;
-            flex-shrink: 0; /* не даём сжиматься */
-            margin-left: 4px;
-            border: 1px solid var(--border);
+            flex-shrink: 0;
+            letter-spacing: 0.3px;
         }
         .top-bar .screen-size:active {
             background: var(--bg-hover);
@@ -104,7 +102,6 @@
 
         .app-layout { display: flex; flex: 1; overflow: hidden; position: relative; }
 
-        /* Сайдбар */
         .sidebar {
             width: 300px;
             background: var(--bg2);
@@ -130,7 +127,6 @@
         .chat-item .info .last-msg { font-size: 12px; color: var(--text2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .chat-item .time { font-size: 11px; color: var(--text2); flex-shrink: 0; }
 
-        /* Панель чата */
         .chat-panel {
             flex: 1;
             display: flex;
@@ -154,7 +150,6 @@
         .msg .del:hover { opacity: 1; }
         .msg img { max-width: 160px; max-height: 120px; border-radius: 8px; margin-top: 4px; display: block; }
 
-        /* Ввод */
         .input-area {
             padding: 6px 10px;
             border-top: 1px solid var(--border);
@@ -191,7 +186,6 @@
         .input-area .btn-cat { background: #f59e0b; }
         .input-area .btn-cat:hover { background: #d97706; }
 
-        /* Модалки */
         .sticker-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); align-items: center; justify-content: center; z-index: 2000; }
         .sticker-modal.open { display: flex; }
         .sticker-modal-content { background: var(--bg2); border-radius: 16px; width: 90%; max-width: 500px; max-height: 80vh; padding: 14px; display: flex; flex-direction: column; overflow: hidden; }
@@ -244,7 +238,6 @@
             to { opacity: 1; transform: translateX(-50%) translateY(0); }
         }
 
-        /* ===== АДАПТИВ ДЛЯ ТЕЛЕФОНА ===== */
         @media (max-width: 700px) {
             .sidebar {
                 position: absolute;
@@ -267,9 +260,8 @@
             .input-area .btn { padding: 5px 10px; font-size: 12px; }
             .top-bar .menu-btn { display: block; }
             .top-bar .screen-size {
-                font-size: 11px; /* увеличен */
-                padding: 2px 6px;
-                margin-left: 2px;
+                font-size: 12px;
+                padding: 2px 8px;
             }
             .top-bar .title { font-size: 14px; }
             .top-bar .settings-btn { font-size: 18px; }
@@ -301,7 +293,7 @@
         <div class="top-bar">
             <button class="menu-btn" id="menuBtn">☰</button>
             <span class="title" id="topTitle">Чаты</span>
-            <span class="screen-size" id="screenSizeDisplay" title="Клик – скопировать размер">0×0</span>
+            <span class="screen-size" id="screenSizeDisplay" title="Клик – скопировать размер">📐 0×0</span>
             <button class="settings-btn" id="settingsBtn">⚙️</button>
         </div>
         <div class="app-layout">
@@ -311,6 +303,7 @@
                     <button class="add-btn" id="addContactBtn">➕</button>
                 </div>
                 <div class="chat-list" id="chatList">
+                    <!-- Глобальный чат -->
                     <div class="chat-item active" data-chat="global" id="chatGlobal">
                         <div class="avatar">🌍</div>
                         <div class="info">
@@ -319,6 +312,7 @@
                         </div>
                         <div class="time" id="globalTime"></div>
                     </div>
+                    <!-- Личные чаты будут добавлены сюда динамически -->
                 </div>
             </div>
             <div class="chat-panel" id="chatPanel">
@@ -658,10 +652,12 @@
         // ОТРИСОВКА СПИСКА ЧАТОВ
         // ============================================================
         function renderChatList() {
+            // Сохраняем глобальный элемент, чтобы не пересоздавать
             const globalItem = chatList.querySelector('#chatGlobal');
             chatList.innerHTML = '';
             chatList.appendChild(globalItem);
 
+            // Собираем имена чатов: все пользователи, кроме себя, и все ключи из messages
             const chatNames = new Set();
             for (let uname in users) {
                 if (uname !== currentUser.username) chatNames.add(uname);
@@ -670,6 +666,7 @@
                 if (key !== 'global') chatNames.add(key);
             }
 
+            // Сортируем по имени (алфавит)
             const sorted = Array.from(chatNames).sort();
 
             sorted.forEach(uname => {
@@ -677,6 +674,7 @@
                 const div = document.createElement('div');
                 div.className = 'chat-item' + (currentChat === uname ? ' active' : '');
                 div.dataset.chat = uname;
+                // Аватар
                 const av = document.createElement('div');
                 av.className = 'avatar';
                 if (user.avatar) {
@@ -688,6 +686,7 @@
                 } else {
                     av.textContent = (user.name || '?').charAt(0).toUpperCase();
                 }
+                // Инфо
                 const info = document.createElement('div');
                 info.className = 'info';
                 const name = document.createElement('div');
@@ -717,9 +716,11 @@
                 chatList.appendChild(div);
             });
 
+            // Обновляем активный класс
             chatList.querySelectorAll('.chat-item').forEach(el => {
                 el.classList.toggle('active', el.dataset.chat === currentChat);
             });
+            // Обновляем глобальный чат (последнее сообщение)
             const gmsgs = messages['global'] || [];
             const lastG = gmsgs.length ? gmsgs[gmsgs.length-1] : null;
             globalLastMsg.textContent = lastG ? (lastG.text ? lastG.text : '🖼️ Стикер') : 'Нет сообщений';
@@ -780,6 +781,7 @@
                 return;
             }
             addContactModal.classList.remove('open');
+            // Загружаем сообщения с этим пользователем (если есть)
             await loadMessages(username);
             currentChat = username;
             refreshCurrentChat();
@@ -893,7 +895,7 @@
         function updateScreenSize() {
             const w = window.innerWidth;
             const h = window.innerHeight;
-            screenSizeDisplay.textContent = w + '×' + h;
+            screenSizeDisplay.textContent = '📐 ' + w + '×' + h;
             if (settingsScreenWidth) settingsScreenWidth.textContent = w;
             if (settingsScreenHeight) settingsScreenHeight.textContent = h;
         }
@@ -901,7 +903,7 @@
 
         // Клик – копирование в буфер
         screenSizeDisplay.addEventListener('click', () => {
-            const text = screenSizeDisplay.textContent;
+            const text = screenSizeDisplay.textContent.replace('📐 ', '');
             if (navigator.clipboard) {
                 navigator.clipboard.writeText(text).then(() => {
                     showToast('Скопировано: ' + text);
