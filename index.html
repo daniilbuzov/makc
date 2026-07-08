@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Чат</title>
+    <title>мой Чат</title>
     <style>
         :root {
             --bg: #0e0e0e;
@@ -36,7 +36,6 @@
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
         body { background: var(--bg); color: var(--text); height: 100vh; overflow: hidden; transition: background .2s; }
 
-        /* ВХОД */
         #loginScreen { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; gap: 14px; padding: 20px; background: var(--bg); }
         #loginScreen h1 { font-size: 32px; color: var(--text); }
         #loginScreen input { width: 300px; max-width: 90%; padding: 14px 18px; border-radius: 40px; border: none; background: var(--bg-input); color: var(--text); font-size: 16px; outline: none; }
@@ -46,18 +45,19 @@
         #loginScreen .remember { display: flex; align-items: center; gap: 8px; color: var(--text2); font-size: 14px; }
         #loginScreen .remember input { width: auto; }
 
-        /* ЧАТ */
         #chatApp { display: none; height: 100vh; background: var(--bg); flex-direction: column; }
 
-        /* Верхняя панель – максимально компактная */
+        /* Верхняя панель – гарантированно видимая */
         .top-bar {
             display: flex;
             align-items: center;
-            padding: 6px 10px;
+            padding: 6px 12px;
             background: var(--bg2);
             border-bottom: 1px solid var(--border);
-            gap: 6px;
+            gap: 8px;
             flex-shrink: 0;
+            z-index: 30; /* поверх сайдбара */
+            position: relative;
         }
         .top-bar .menu-btn {
             background: none;
@@ -65,6 +65,7 @@
             color: var(--text);
             font-size: 20px;
             cursor: pointer;
+            flex-shrink: 0;
         }
         .top-bar .title {
             flex: 1;
@@ -73,17 +74,21 @@
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            min-width: 0;
         }
         .top-bar .screen-size {
-            font-size: 11px;
+            font-size: 13px;
             color: var(--text2);
             white-space: nowrap;
             cursor: pointer;
-            padding: 1px 5px;
-            border-radius: 8px;
+            padding: 2px 8px;
+            border-radius: 12px;
             background: var(--bg3);
             font-variant-numeric: tabular-nums;
-            letter-spacing: -0.5px;
+            letter-spacing: -0.2px;
+            flex-shrink: 0; /* не даём сжиматься */
+            margin-left: 4px;
+            border: 1px solid var(--border);
         }
         .top-bar .screen-size:active {
             background: var(--bg-hover);
@@ -92,8 +97,9 @@
             background: none;
             border: none;
             color: var(--text);
-            font-size: 19px;
+            font-size: 20px;
             cursor: pointer;
+            flex-shrink: 0;
         }
 
         .app-layout { display: flex; flex: 1; overflow: hidden; position: relative; }
@@ -108,7 +114,7 @@
             flex-shrink: 0;
             overflow: hidden;
             transition: transform .25s ease;
-            z-index: 10;
+            z-index: 20;
         }
         .sidebar-header { padding: 10px 16px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
         .sidebar-header h2 { font-size: 17px; }
@@ -260,9 +266,13 @@
             .input-area input[type="text"] { font-size: 13px; padding: 6px 10px; }
             .input-area .btn { padding: 5px 10px; font-size: 12px; }
             .top-bar .menu-btn { display: block; }
-            .top-bar .screen-size { font-size: 8px; padding: 1px 4px; }
+            .top-bar .screen-size {
+                font-size: 11px; /* увеличен */
+                padding: 2px 6px;
+                margin-left: 2px;
+            }
             .top-bar .title { font-size: 14px; }
-            .top-bar .settings-btn { font-size: 17px; }
+            .top-bar .settings-btn { font-size: 18px; }
             .top-bar { padding: 4px 8px; gap: 4px; }
         }
         @media (min-width: 701px) {
