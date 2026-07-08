@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Чат</title>
+    <title>мой Чат</title>
     <style>
         /* ===== ПЕРЕМЕННЫЕ ТЕМЫ ===== */
         :root {
@@ -165,6 +165,7 @@
         .modal .btn { width: 100%; padding: 12px; border: none; border-radius: 20px; background: var(--avatar-bg); color: #fff; font-weight: 600; cursor: pointer; }
         .modal .btn-close { background: transparent; color: var(--text2); margin-top: 8px; }
 
+        /* ===== НАСТРОЙКИ (с отображением размеров экрана) ===== */
         .settings-panel { display: none; position: fixed; inset: 0; background: var(--bg); z-index: 999; padding: 20px; flex-direction: column; gap: 16px; overflow-y: auto; }
         .settings-panel.open { display: flex; }
         .settings-panel .back { background: none; border: none; color: var(--text); font-size: 24px; cursor: pointer; align-self: flex-start; }
@@ -173,6 +174,7 @@
         .settings-panel .theme-toggle { display: flex; gap: 12px; margin: 8px 0; }
         .settings-panel .theme-toggle button { flex: 1; padding: 10px; border: 2px solid var(--border); border-radius: 20px; background: transparent; color: var(--text); cursor: pointer; font-weight: 500; }
         .settings-panel .theme-toggle button.active { border-color: var(--avatar-bg); background: var(--bg-hover); }
+        .settings-panel .screen-size { background: var(--bg3); padding: 10px; border-radius: 12px; font-size: 14px; color: var(--text2); text-align: center; border: 1px solid var(--border); }
         .settings-panel .logout-btn { background: #e74c3c; color: #fff; border: none; padding: 12px; border-radius: 20px; font-weight: 600; cursor: pointer; }
 
         /* ===== ТОСТ-УВЕДОМЛЕНИЯ ===== */
@@ -214,7 +216,6 @@
             .sidebar.open {
                 transform: translateX(0);
             }
-            /* Затемняем фон чата при открытом сайдбаре */
             .chat-panel.shifted {
                 opacity: 0.3;
                 pointer-events: none;
@@ -226,7 +227,6 @@
             .input-area { padding: 6px 10px; gap: 4px; }
             .input-area input[type="text"] { font-size: 14px; padding: 8px 12px; }
             .input-area .btn { padding: 6px 12px; font-size: 13px; }
-            /* Убираем лишние отступы */
             .top-bar .menu-btn { display: block; }
         }
         @media (min-width: 701px) {
@@ -321,6 +321,7 @@
         </div>
     </div>
 
+    <!-- НАСТРОЙКИ С ОТОБРАЖЕНИЕМ РАЗМЕРОВ ЭКРАНА -->
     <div class="settings-panel" id="settingsPanel">
         <button class="back" id="settingsBack">← Назад</button>
         <h2>Настройки</h2>
@@ -330,6 +331,9 @@
         <div class="theme-toggle">
             <button data-theme="dark" id="themeDark">🌙 Тёмная</button>
             <button data-theme="light" id="themeLight">☀️ Светлая</button>
+        </div>
+        <div class="screen-size" id="screenSizeDisplay">
+            Размер окна: <span id="screenWidth">0</span> × <span id="screenHeight">0</span> px
         </div>
         <button class="logout-btn" id="settingsLogout">Выйти</button>
     </div>
@@ -372,6 +376,8 @@
         const themeDark = $('themeDark');
         const themeLight = $('themeLight');
         const settingsLogout = $('settingsLogout');
+        const screenWidth = $('screenWidth');
+        const screenHeight = $('screenHeight');
         const addContactBtn = $('addContactBtn');
         const addContactModal = $('addContactModal');
         const contactInput = $('contactInput');
@@ -662,7 +668,7 @@
                     refreshCurrentChat();
                     renderChatList();
                     updatePanelHeader(uname);
-                    closeSidebar(); // закрываем сайдбар на телефоне
+                    closeSidebar();
                 });
                 chatList.appendChild(div);
             });
@@ -838,8 +844,14 @@
         }
 
         // ============================================================
-        // НАСТРОЙКИ
+        // НАСТРОЙКИ И РАЗМЕРЫ ЭКРАНА
         // ============================================================
+        function updateScreenSize() {
+            screenWidth.textContent = window.innerWidth;
+            screenHeight.textContent = window.innerHeight;
+        }
+        window.addEventListener('resize', updateScreenSize);
+
         function applyTheme(theme) {
             document.documentElement.setAttribute('data-theme', theme);
             localStorage.setItem('chat_theme', theme);
@@ -912,6 +924,7 @@
             renderChatList();
             updatePanelHeader(currentChat);
             startPolling();
+            updateScreenSize(); // первое обновление размеров
 
             // Обработчики
             sendBtn.addEventListener('click', () => sendMessage(messageInput.value));
@@ -924,7 +937,6 @@
 
             menuBtn.addEventListener('click', toggleSidebar);
 
-            // Клик по глобальному чату
             chatGlobal.addEventListener('click', () => {
                 if (currentChat === 'global') return;
                 currentChat = 'global';
@@ -935,7 +947,6 @@
                 localStorage.setItem('chat_current', 'global');
             });
 
-            // Закрытие сайдбара при клике вне него (на телефоне)
             document.addEventListener('click', (e) => {
                 if (window.innerWidth <= 700 && sidebar.classList.contains('open')) {
                     if (!sidebar.contains(e.target) && e.target !== menuBtn) {
@@ -952,6 +963,7 @@
             settingsBtn.addEventListener('click', () => {
                 settingsPanel.classList.add('open');
                 avatarUrlInput.value = currentUser.avatar || '';
+                updateScreenSize(); // обновить при открытии
             });
             settingsBack.addEventListener('click', () => settingsPanel.classList.remove('open'));
             avatarUrlInput.addEventListener('change', async () => {
