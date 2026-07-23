@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Чат</title>
+    <title>Мессенджер</title>
     <style>
         :root {
             --bg: #0e0e0e;
             --bg2: #1a1a1a;
             --bg3: #242424;
-            --bg-hover: #2b2b2b;
+            --bg-hover: #2e2e2e;
             --bg-input: #242424;
             --bg-msg-self: #2a6fdb;
             --bg-msg-other: #242424;
@@ -18,6 +18,7 @@
             --border: #2b2b2b;
             --avatar-bg: #2a6fdb;
             --shadow: rgba(0,0,0,0.5);
+            --transition: 0.2s ease;
         }
         [data-theme="light"] {
             --bg: #ffffff;
@@ -37,13 +38,12 @@
         body { background: var(--bg); color: var(--text); height: 100vh; overflow: hidden; transition: background .2s; }
 
         #loginScreen { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; gap: 14px; padding: 20px; background: var(--bg); }
-        #loginScreen h1 { font-size: 32px; color: var(--text); }
+        #loginScreen h1 { font-size: 32px; }
         #loginScreen input { width: 300px; max-width: 90%; padding: 14px 18px; border-radius: 40px; border: none; background: var(--bg-input); color: var(--text); font-size: 16px; outline: none; }
         #loginScreen .btn { width: 300px; max-width: 90%; padding: 14px; border: none; border-radius: 40px; background: var(--avatar-bg); color: #fff; font-weight: 600; font-size: 16px; cursor: pointer; }
-        #loginScreen .toggle-link { color: var(--text2); cursor: pointer; font-size: 14px; text-decoration: underline; margin-top: 4px; }
+        #loginScreen .toggle-link { color: var(--text2); cursor: pointer; font-size: 14px; text-decoration: underline; }
         #loginScreen .error { color: #e74c3c; font-size: 14px; min-height: 20px; }
         #loginScreen .remember { display: flex; align-items: center; gap: 8px; color: var(--text2); font-size: 14px; }
-        #loginScreen .remember input { width: auto; }
 
         #chatApp { display: none; height: 100vh; background: var(--bg); flex-direction: column; }
 
@@ -58,7 +58,7 @@
             z-index: 30;
             position: relative;
         }
-        .top-bar .menu-btn {
+        .top-bar .menu-btn, .top-bar .settings-btn {
             background: none;
             border: none;
             color: var(--text);
@@ -78,7 +78,6 @@
         .top-bar .screen-size {
             font-size: 14px;
             font-weight: 500;
-            color: var(--text);
             background: var(--bg3);
             padding: 2px 10px;
             border-radius: 16px;
@@ -86,21 +85,9 @@
             white-space: nowrap;
             cursor: pointer;
             flex-shrink: 0;
-            letter-spacing: 0.3px;
-        }
-        .top-bar .screen-size:active {
-            background: var(--bg-hover);
-        }
-        .top-bar .settings-btn {
-            background: none;
-            border: none;
-            color: var(--text);
-            font-size: 20px;
-            cursor: pointer;
-            flex-shrink: 0;
         }
 
-        .app-layout { display: flex; flex: 1; overflow: hidden; position: relative; }
+        .app-layout { display: flex; flex: 1; overflow: hidden; }
 
         .sidebar {
             width: 300px;
@@ -109,7 +96,6 @@
             display: flex;
             flex-direction: column;
             flex-shrink: 0;
-            overflow: hidden;
             transition: transform .25s ease;
             z-index: 20;
         }
@@ -117,7 +103,7 @@
         .sidebar-header h2 { font-size: 17px; }
         .sidebar-header .add-btn { background: none; border: none; color: var(--avatar-bg); font-size: 22px; cursor: pointer; }
         .chat-list { flex: 1; overflow-y: auto; padding: 6px 0; }
-        .chat-item { display: flex; align-items: center; gap: 10px; padding: 8px 14px; cursor: pointer; border-left: 3px solid transparent; }
+        .chat-item { display: flex; align-items: center; gap: 10px; padding: 8px 14px; cursor: pointer; border-left: 3px solid transparent; transition: background .2s; }
         .chat-item:hover { background: var(--bg-hover); }
         .chat-item.active { background: var(--bg-hover); border-left-color: var(--avatar-bg); }
         .chat-item .avatar { width: 38px; height: 38px; border-radius: 50%; background: var(--avatar-bg); display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 16px; color: #fff; flex-shrink: 0; overflow: hidden; }
@@ -142,13 +128,14 @@
         .chat-panel-header .status { font-size: 12px; color: var(--text2); }
 
         .messages-area { flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 4px; background: var(--bg); }
-        .msg { max-width: 80%; padding: 6px 12px; border-radius: 14px; line-height: 1.4; font-size: 14px; word-wrap: break-word; position: relative; }
+        .msg { max-width: 80%; padding: 6px 12px; border-radius: 14px; line-height: 1.4; font-size: 14px; word-wrap: break-word; position: relative; animation: fadeInUp 0.3s; }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
         .msg.self { align-self: flex-end; background: var(--bg-msg-self); color: #fff; border-bottom-right-radius: 4px; }
         .msg.other { align-self: flex-start; background: var(--bg-msg-other); color: var(--text); border-bottom-left-radius: 4px; }
         .msg .time { font-size: 10px; opacity: 0.6; margin-top: 2px; display: block; }
         .msg .del { background: none; border: none; color: #f87171; cursor: pointer; font-size: 11px; margin-left: 6px; opacity: 0.5; }
         .msg .del:hover { opacity: 1; }
-        .msg img { max-width: 160px; max-height: 120px; border-radius: 8px; margin-top: 4px; display: block; }
+        .msg img { max-width: 160px; max-height: 120px; border-radius: 8px; margin-top: 4px; display: block; cursor: pointer; }
 
         .input-area {
             padding: 6px 10px;
@@ -158,7 +145,6 @@
             gap: 5px;
             align-items: center;
             flex-shrink: 0;
-            flex-wrap: nowrap;
         }
         .input-area input[type="text"] {
             flex: 1;
@@ -183,8 +169,8 @@
             white-space: nowrap;
             flex-shrink: 0;
         }
-        .input-area .btn-cat { background: #f59e0b; }
-        .input-area .btn-cat:hover { background: #d97706; }
+        .input-area .btn-sticker { background: #f59e0b; }
+        .input-area .btn-sticker:hover { background: #d97706; }
 
         .sticker-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); align-items: center; justify-content: center; z-index: 2000; }
         .sticker-modal.open { display: flex; }
@@ -213,7 +199,7 @@
         .settings-panel label { font-weight: 500; }
         .settings-panel input { padding: 8px 12px; border-radius: 16px; border: 1px solid var(--border); background: var(--bg-input); color: var(--text); font-size: 14px; outline: none; }
         .settings-panel .theme-toggle { display: flex; gap: 10px; margin: 6px 0; }
-        .settings-panel .theme-toggle button { flex: 1; padding: 8px; border: 2px solid var(--border); border-radius: 16px; background: transparent; color: var(--text); cursor: pointer; font-weight: 500; font-size: 14px; }
+        .settings-panel .theme-toggle button { flex: 1; padding: 8px; border: 2px solid var(--border); border-radius: 16px; background: transparent; color: var(--text); cursor: pointer; font-weight: 500; }
         .settings-panel .theme-toggle button.active { border-color: var(--avatar-bg); background: var(--bg-hover); }
         .settings-panel .logout-btn { background: #e74c3c; color: #fff; border: none; padding: 10px; border-radius: 16px; font-weight: 600; cursor: pointer; }
 
@@ -241,13 +227,10 @@
         @media (max-width: 700px) {
             .sidebar {
                 position: absolute;
-                top: 0;
-                left: 0;
-                bottom: 0;
+                top: 0; left: 0; bottom: 0;
                 width: 260px;
                 transform: translateX(-100%);
                 z-index: 20;
-                border-right: 1px solid var(--border);
                 background: var(--bg2);
                 box-shadow: 4px 0 20px rgba(0,0,0,0.3);
             }
@@ -258,18 +241,6 @@
             .input-area { padding: 4px 8px; gap: 4px; }
             .input-area input[type="text"] { font-size: 13px; padding: 6px 10px; }
             .input-area .btn { padding: 5px 10px; font-size: 12px; }
-            .top-bar .menu-btn { display: block; }
-            .top-bar .screen-size {
-                font-size: 12px;
-                padding: 2px 8px;
-            }
-            .top-bar .title { font-size: 14px; }
-            .top-bar .settings-btn { font-size: 18px; }
-            .top-bar { padding: 4px 8px; gap: 4px; }
-        }
-        @media (min-width: 701px) {
-            .sidebar { position: relative; transform: none !important; }
-            .chat-panel.shifted { opacity: 1; pointer-events: auto; }
         }
     </style>
 </head>
@@ -277,10 +248,10 @@
 
     <!-- ВХОД -->
     <div id="loginScreen">
-        <h1>📱 Чат</h1>
+        <h1>📱 Мессенджер</h1>
         <div id="loginError" class="error"></div>
-        <input type="text" id="loginInput" placeholder="Логин">
-        <input type="password" id="passInput" placeholder="Пароль">
+        <input type="text" id="loginInput" placeholder="Логин" autocomplete="username">
+        <input type="password" id="passInput" placeholder="Пароль" autocomplete="current-password">
         <div class="remember">
             <input type="checkbox" id="rememberCheck" checked> <label for="rememberCheck">Запомнить меня</label>
         </div>
@@ -312,7 +283,6 @@
                         </div>
                         <div class="time" id="globalTime"></div>
                     </div>
-                    <!-- Личные чаты будут добавлены сюда динамически -->
                 </div>
             </div>
             <div class="chat-panel" id="chatPanel">
@@ -327,8 +297,8 @@
                     <div style="color:var(--text2); text-align:center; margin-top:40px;">💬 Начните общение</div>
                 </div>
                 <div class="input-area">
-                    <input type="text" id="messageInput" placeholder="Сообщение..." maxlength="500">
-                    <button class="btn btn-cat" id="catBtn">🐱</button>
+                    <input type="text" id="messageInput" placeholder="Сообщение..." maxlength="500" autocomplete="off">
+                    <button class="btn btn-sticker" id="stickerBtn">🐱</button>
                     <button class="btn" id="sendBtn">→</button>
                 </div>
             </div>
@@ -377,25 +347,30 @@
 
     <div class="toast-container" id="toast"></div>
 
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
     <script>
         // ============================================================
         // КОНФИГ
         // ============================================================
         const DB_URL = 'https://makc-894d6-default-rtdb.firebaseio.com/';
         const GIPHY_API_KEY = 'd6yTgfwrs03OJkuyfjfPiPmNp4fUDbEY';
-        const DEFAULT_STICKERS = [];
+
+        // Инициализация Firebase
+        firebase.initializeApp({ databaseURL: DB_URL });
+        const db = firebase.database();
 
         let currentUser = null;
         let currentChat = 'global';
-        let messages = {};
-        let users = {};
-        let stickerList = [];
-        let pollInterval = null;
         let isLogin = true;
-        let lastNotifiedMsgId = null;
-        let isChatFocused = true;
+        let chatListeners = {}; // для отписки от старых чатов
+        let presenceRef = null;
+        let usersCache = {};
+        let stickerCache = [];
 
-        // DOM
+        // DOM элементы
         const $ = id => document.getElementById(id);
         const loginScreen = $('loginScreen');
         const chatApp = $('chatApp');
@@ -431,7 +406,7 @@
         const messagesArea = $('messagesArea');
         const messageInput = $('messageInput');
         const sendBtn = $('sendBtn');
-        const catBtn = $('catBtn');
+        const stickerBtn = $('stickerBtn');
         const sidebar = $('sidebar');
         const chatPanel = $('chatPanel');
         const stickerModal = $('stickerModal');
@@ -442,129 +417,161 @@
         const toast = $('toast');
 
         // ============================================================
-        // РАБОТА С БАЗОЙ
-        // ============================================================
-        async function dbGet(path) {
-            const r = await fetch(DB_URL + path + '.json');
-            if (!r.ok) throw new Error('DB error');
-            return r.json();
-        }
-        async function dbPut(path, data) {
-            const r = await fetch(DB_URL + path + '.json', { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data) });
-            if (!r.ok) throw new Error('DB error');
-            return r.json();
-        }
-        async function dbPatch(path, data) {
-            const r = await fetch(DB_URL + path + '.json', { method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data) });
-            if (!r.ok) throw new Error('DB error');
-            return r.json();
-        }
-        async function dbDelete(path) {
-            const r = await fetch(DB_URL + path + '.json', { method:'DELETE' });
-            if (!r.ok) throw new Error('DB error');
-            return r.json();
-        }
-        async function dbPush(path, data) {
-            const r = await fetch(DB_URL + path + '.json', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data) });
-            if (!r.ok) throw new Error('DB error');
-            return r.json();
-        }
-
-        // ============================================================
-        // АУТЕНТИФИКАЦИЯ
+        // ПОЛЬЗОВАТЕЛИ (хранение в /users)
         // ============================================================
         async function registerUser(username, password) {
-            const all = await dbGet('users');
-            if (all && all[username]) throw new Error('Пользователь уже существует');
-            await dbPut(`users/${username}`, { password, name: username, status: 'online', lastSeen: Date.now(), avatar: '' });
-            return { username, password, name: username, avatar: '' };
+            const snap = await db.ref(`users/${username}`).once('value');
+            if (snap.exists()) throw new Error('Пользователь уже существует');
+            await db.ref(`users/${username}`).set({
+                password,
+                name: username,
+                avatar: '',
+            });
+            return { username, name: username, avatar: '' };
         }
+
         async function loginUser(username, password) {
-            const user = await dbGet(`users/${username}`);
-            if (!user || user.password !== password) throw new Error('Неверный логин или пароль');
-            await dbPatch(`users/${username}`, { status: 'online', lastSeen: Date.now() });
+            const snap = await db.ref(`users/${username}`).once('value');
+            if (!snap.exists()) throw new Error('Пользователь не найден');
+            const user = snap.val();
+            if (user.password !== password) throw new Error('Неверный пароль');
             return { username, ...user };
         }
-        async function logoutUser() {
-            if (currentUser) {
-                await dbPatch(`users/${currentUser.username}`, { status: 'offline', lastSeen: Date.now() });
-            }
-            localStorage.removeItem('chat_user');
-            localStorage.removeItem('chat_pass');
-            localStorage.removeItem('chat_theme');
+
+        async function updateProfile(data) {
+            if (!currentUser) return;
+            await db.ref(`users/${currentUser.username}`).update(data);
+            currentUser = { ...currentUser, ...data };
         }
 
         // ============================================================
-        // СТИКЕРЫ
+        // ПРИСУТСТВИЕ (RTDB presence)
         // ============================================================
-        async function loadStickers() {
-            const data = await dbGet('catGifs');
-            if (data) {
-                stickerList = Object.values(data);
-            } else {
-                await dbPut('catGifs', {});
-                stickerList = [];
-            }
-        }
-        async function addSticker(url) {
-            if (!url.trim()) return;
-            try { new URL(url); } catch { alert('Некорректный URL'); return; }
-            await dbPush('catGifs', url);
-            await loadStickers();
-            alert('Стикер добавлен!');
+        function setupPresence() {
+            if (!currentUser) return;
+            const userPresenceRef = db.ref(`presence/${currentUser.username}`);
+            userPresenceRef.set({
+                username: currentUser.username,
+                name: currentUser.name,
+                lastSeen: firebase.database.ServerValue.TIMESTAMP,
+            });
+            userPresenceRef.onDisconnect().remove();
         }
 
-        // ============================================================
-        // GIPHY
-        // ============================================================
-        async function searchGiphy(query) {
-            if (!query.trim()) return [];
-            const url = `https://api.giphy.com/v1/gifs/search?api_key=${GIPHY_API_KEY}&q=${encodeURIComponent(query)}&limit=20&rating=g`;
-            try {
-                const res = await fetch(url);
-                const data = await res.json();
-                if (data.data && data.data.length) {
-                    return data.data.map(item => item.images.original.url);
+        function listenPresence() {
+            db.ref('presence').on('value', snap => {
+                const data = snap.val() || {};
+                const now = Date.now();
+                // Очистка старых записей (> 5 мин) не на клиенте, просто фильтруем
+                for (let uname in data) {
+                    const user = data[uname];
+                    if (now - user.lastSeen > 300000) {
+                        db.ref(`presence/${uname}`).remove();
+                    }
                 }
-                return [];
-            } catch (err) {
-                console.error('GIPHY error:', err);
-                return [];
+                updateOnlineStatuses();
+            });
+        }
+
+        function updateOnlineStatuses() {
+            // Обновим статусы в списке чатов
+            document.querySelectorAll('.chat-item .status-indicator').forEach(el => el.remove());
+            // Проще не добавлять индикаторы, а обновлять панель заголовка при смене чата
+            if (currentChat !== 'global') {
+                const isOnline = checkOnline(currentChat);
+                panelStatus.textContent = isOnline ? 'онлайн' : 'офлайн';
+                panelStatus.style.color = isOnline ? '#4caf84' : 'var(--text2)';
+            } else {
+                panelStatus.textContent = 'онлайн';
+                panelStatus.style.color = '#4caf84';
             }
         }
 
-        // ============================================================
-        // ПОЛЬЗОВАТЕЛИ
-        // ============================================================
-        async function loadUsers() {
-            const data = await dbGet('users');
-            users = data || {};
-            renderChatList();
+        function checkOnline(username) {
+            const presence = db.ref('presence').once('value').then(snap => {
+                const data = snap.val() || {};
+                return !!data[username];
+            });
+            // Используем синхронно? Нет, переделаем: будем хранить локальный кеш presence
+            // Для простоты обновим при каждом событии presence
+            return false;
         }
-        function getChatId(u1, u2) {
-            return [u1, u2].sort().join('_');
+        // Более правильно: хранить локальный объект presenceData
+        let presenceData = {};
+        db.ref('presence').on('value', snap => {
+            presenceData = snap.val() || {};
+            updateOnlineStatuses();
+            renderChatList(); // обновить список (можно только статусы)
+        });
+
+        function isUserOnline(username) {
+            return !!presenceData[username];
         }
 
         // ============================================================
         // СООБЩЕНИЯ
         // ============================================================
-        async function loadMessages(chat) {
-            let path = chat === 'global' ? 'messages/global' : `messages/private/${getChatId(currentUser.username, chat)}`;
-            const data = await dbGet(path);
-            const msgs = [];
-            if (data) {
-                for (let key in data) {
-                    msgs.push({ ...data[key], id: key });
-                }
-                msgs.sort((a,b) => a.timestamp - b.timestamp);
+        function getChatPath(chat) {
+            if (chat === 'global') return 'messages/global';
+            const ids = [currentUser.username, chat].sort();
+            return `messages/private/${ids[0]}_${ids[1]}`;
+        }
+
+        function listenToChat(chat) {
+            // Отписываемся от предыдущего слушателя
+            if (chatListeners[chat]) {
+                db.ref(getChatPath(chat)).off('value', chatListeners[chat]);
             }
-            messages[chat] = msgs;
-            return msgs;
+            const callback = snap => {
+                const msgs = [];
+                const data = snap.val();
+                if (data) {
+                    for (let key in data) {
+                        msgs.push({ id: key, ...data[key] });
+                    }
+                    msgs.sort((a, b) => a.timestamp - b.timestamp);
+                }
+                renderMessages(msgs);
+                updateLastMessage(chat, msgs);
+                // Уведомление о новом сообщении
+                if (msgs.length > 0) {
+                    const last = msgs[msgs.length - 1];
+                    if (last.sender !== currentUser.username && !document.hasFocus()) {
+                        showToast(`Новое от ${last.sender}: ${last.text || '🖼️'}`);
+                        notify(last);
+                    }
+                }
+            };
+            db.ref(getChatPath(chat)).on('value', callback);
+            chatListeners[chat] = callback;
+        }
+
+        function stopListening(chat) {
+            if (chatListeners[chat]) {
+                db.ref(getChatPath(chat)).off('value', chatListeners[chat]);
+                delete chatListeners[chat];
+            }
+        }
+
+        async function sendMessage(text, imageUrl = null) {
+            if (!currentUser) return;
+            const msg = {
+                sender: currentUser.username,
+                text: text || '',
+                timestamp: firebase.database.ServerValue.TIMESTAMP,
+            };
+            if (imageUrl) msg.imageUrl = imageUrl;
+            await db.ref(getChatPath(currentChat)).push(msg);
+            messageInput.value = '';
+        }
+
+        async function deleteMessage(chat, msgId) {
+            await db.ref(`${getChatPath(chat)}/${msgId}`).remove();
         }
 
         function renderMessages(msgs) {
             messagesArea.innerHTML = '';
-            if (!msgs || msgs.length === 0) {
+            if (!msgs.length) {
                 messagesArea.innerHTML = '<div style="color:var(--text2); text-align:center; margin-top:40px;">💬 Нет сообщений</div>';
                 return;
             }
@@ -572,56 +579,27 @@
                 const isSelf = msg.sender === currentUser.username;
                 const div = document.createElement('div');
                 div.className = 'msg ' + (isSelf ? 'self' : 'other');
-                let content = '';
-                if (msg.text) content += escapeHtml(msg.text);
+                let content = escapeHtml(msg.text || '');
                 if (msg.imageUrl) {
-                    content += `<br><img src="${msg.imageUrl}" alt="стикер" onerror="this.style.display='none'">`;
+                    content += `<br><img src="${msg.imageUrl}" alt="gif" onclick="window.open('${msg.imageUrl}')">`;
                 }
-                let del = '';
+                div.innerHTML = content + `<span class="time">${formatTime(msg.timestamp)}</span>`;
                 if (isSelf) {
-                    del = `<button class="del" data-chat="${currentChat}" data-id="${msg.id}">🗑</button>`;
+                    const delBtn = document.createElement('button');
+                    delBtn.className = 'del';
+                    delBtn.textContent = '🗑';
+                    delBtn.onclick = () => deleteMessage(currentChat, msg.id);
+                    div.appendChild(delBtn);
                 }
-                div.innerHTML = content + `<span class="time">${timeStr(msg.timestamp)}</span>` + del;
                 messagesArea.appendChild(div);
-            });
-            messagesArea.querySelectorAll('.del').forEach(btn => {
-                btn.addEventListener('click', async (e) => {
-                    const chat = btn.dataset.chat;
-                    const id = btn.dataset.id;
-                    if (!confirm('Удалить?')) return;
-                    let path = chat === 'global' ? 'messages/global' : `messages/private/${getChatId(currentUser.username, chat)}`;
-                    await dbDelete(`${path}/${id}`);
-                    await refreshCurrentChat();
-                });
             });
             messagesArea.scrollTop = messagesArea.scrollHeight;
         }
 
-        async function refreshCurrentChat() {
-            if (!currentUser) return;
-            const msgs = await loadMessages(currentChat);
-            renderMessages(msgs);
-            updateChatLastMsg(currentChat, msgs);
-            if (msgs.length > 0) {
-                const lastMsg = msgs[msgs.length-1];
-                if (lastMsg.id !== lastNotifiedMsgId && !isChatFocused && lastMsg.sender !== currentUser.username) {
-                    showToast(`Новое от ${lastMsg.sender}: ${lastMsg.text || '🖼️'}`);
-                    lastNotifiedMsgId = lastMsg.id;
-                    if (Notification.permission === 'default') Notification.requestPermission();
-                    if (Notification.permission === 'granted') {
-                        new Notification('Новое сообщение', {
-                            body: `${lastMsg.sender}: ${lastMsg.text || '🖼️ Стикер'}`,
-                            icon: 'https://cdn-icons-png.flaticon.com/512/1044/1044342.png'
-                        });
-                    }
-                }
-            }
-        }
-
-        function updateChatLastMsg(chat, msgs) {
-            const last = msgs && msgs.length ? msgs[msgs.length-1] : null;
+        function updateLastMessage(chat, msgs) {
+            const last = msgs.length ? msgs[msgs.length - 1] : null;
             const preview = last ? (last.text ? last.text : '🖼️ Стикер') : 'Нет сообщений';
-            const time = last ? timeStr(last.timestamp) : '';
+            const time = last ? formatTime(last.timestamp) : '';
             if (chat === 'global') {
                 globalLastMsg.textContent = preview;
                 globalTime.textContent = time;
@@ -635,96 +613,110 @@
         }
 
         // ============================================================
-        // ОТПРАВКА
+        // СТИКЕРЫ
         // ============================================================
-        async function sendMessage(text, imageUrl = null) {
-            if (!text && !imageUrl) return;
-            const msg = { sender: currentUser.username, text: text || '', timestamp: Date.now() };
-            if (imageUrl) msg.imageUrl = imageUrl;
-            let path = currentChat === 'global' ? 'messages/global' : `messages/private/${getChatId(currentUser.username, currentChat)}`;
-            await dbPush(path, msg);
-            messageInput.value = '';
-            await refreshCurrentChat();
-            renderChatList();
+        async function loadStickers() {
+            const snap = await db.ref('catGifs').once('value');
+            const data = snap.val();
+            stickerCache = data ? Object.values(data) : [];
+        }
+
+        async function addStickerUrl(url) {
+            if (!url.trim()) return;
+            try { new URL(url); } catch { alert('Некорректный URL'); return; }
+            await db.ref('catGifs').push(url);
+            await loadStickers();
+            renderStickers('saved');
         }
 
         // ============================================================
-        // ОТРИСОВКА СПИСКА ЧАТОВ
+        // GIPHY
+        // ============================================================
+        async function searchGiphy(query) {
+            if (!query.trim()) return [];
+            const url = `https://api.giphy.com/v1/gifs/search?api_key=${GIPHY_API_KEY}&q=${encodeURIComponent(query)}&limit=20&rating=g`;
+            const res = await fetch(url);
+            const data = await res.json();
+            return (data.data || []).map(item => item.images.original.url);
+        }
+
+        // ============================================================
+        // UI: список чатов
         // ============================================================
         function renderChatList() {
-            // Сохраняем глобальный элемент, чтобы не пересоздавать
             const globalItem = chatList.querySelector('#chatGlobal');
             chatList.innerHTML = '';
             chatList.appendChild(globalItem);
 
-            // Собираем имена чатов: все пользователи, кроме себя, и все ключи из messages
-            const chatNames = new Set();
-            for (let uname in users) {
-                if (uname !== currentUser.username) chatNames.add(uname);
+            if (!currentUser) return;
+            const contactNames = new Set();
+            // Все пользователи из usersCache
+            for (let uname in usersCache) {
+                if (uname !== currentUser.username) contactNames.add(uname);
             }
-            for (let key in messages) {
-                if (key !== 'global') chatNames.add(key);
-            }
+            // Добавляем тех, с кем уже есть переписка (могут быть не в usersCache)
+            // можно пропустить
 
-            // Сортируем по имени (алфавит)
-            const sorted = Array.from(chatNames).sort();
-
+            const sorted = Array.from(contactNames).sort();
             sorted.forEach(uname => {
-                const user = users[uname] || { name: uname, avatar: '' };
+                const user = usersCache[uname] || { name: uname, avatar: '' };
                 const div = document.createElement('div');
                 div.className = 'chat-item' + (currentChat === uname ? ' active' : '');
                 div.dataset.chat = uname;
-                // Аватар
                 const av = document.createElement('div');
                 av.className = 'avatar';
                 if (user.avatar) {
-                    const img = document.createElement('img');
-                    img.src = user.avatar;
-                    img.alt = '';
-                    img.onerror = () => { img.style.display = 'none'; av.textContent = (user.name || '?').charAt(0).toUpperCase(); };
-                    av.appendChild(img);
+                    av.innerHTML = `<img src="${user.avatar}" onerror="this.style.display='none'; this.parentElement.textContent='${(user.name||'?').charAt(0).toUpperCase()}'">`;
                 } else {
-                    av.textContent = (user.name || '?').charAt(0).toUpperCase();
+                    av.textContent = (user.name || uname).charAt(0).toUpperCase();
                 }
-                // Инфо
                 const info = document.createElement('div');
                 info.className = 'info';
-                const name = document.createElement('div');
-                name.className = 'name';
-                name.textContent = user.name || uname;
-                const lastMsg = document.createElement('div');
-                lastMsg.className = 'last-msg';
-                const msgs = messages[uname] || [];
-                const last = msgs.length ? msgs[msgs.length-1] : null;
-                lastMsg.textContent = last ? (last.text ? last.text : '🖼️ Стикер') : 'Нет сообщений';
-                info.appendChild(name);
-                info.appendChild(lastMsg);
-                const time = document.createElement('div');
-                time.className = 'time';
-                time.textContent = last ? timeStr(last.timestamp) : '';
+                info.innerHTML = `<div class="name">${user.name||uname}</div><div class="last-msg">Загрузка...</div>`;
+                const timeDiv = document.createElement('div');
+                timeDiv.className = 'time';
                 div.appendChild(av);
                 div.appendChild(info);
-                div.appendChild(time);
-                div.addEventListener('click', () => {
-                    if (currentChat === uname) return;
-                    currentChat = uname;
-                    refreshCurrentChat();
-                    renderChatList();
-                    updatePanelHeader(uname);
-                    closeSidebar();
-                });
+                div.appendChild(timeDiv);
+                div.addEventListener('click', () => switchChat(uname));
                 chatList.appendChild(div);
+                // Подгружаем последнее сообщение один раз
+                loadLastMessage(uname, info.querySelector('.last-msg'), timeDiv);
             });
 
-            // Обновляем активный класс
-            chatList.querySelectorAll('.chat-item').forEach(el => {
-                el.classList.toggle('active', el.dataset.chat === currentChat);
+            // Обновляем глобальный чат
+            const gMsgs = db.ref('messages/global').once('value').then(snap => {
+                const msgs = [];
+                const data = snap.val();
+                if (data) for (let k in data) msgs.push(data[k]);
+                msgs.sort((a,b)=>a.timestamp-b.timestamp);
+                updateLastMessage('global', msgs);
             });
-            // Обновляем глобальный чат (последнее сообщение)
-            const gmsgs = messages['global'] || [];
-            const lastG = gmsgs.length ? gmsgs[gmsgs.length-1] : null;
-            globalLastMsg.textContent = lastG ? (lastG.text ? lastG.text : '🖼️ Стикер') : 'Нет сообщений';
-            globalTime.textContent = lastG ? timeStr(lastG.timestamp) : '';
+        }
+
+        async function loadLastMessage(chatName, lastMsgEl, timeEl) {
+            const path = `messages/private/${[currentUser.username, chatName].sort().join('_')}`;
+            const snap = await db.ref(path).limitToLast(1).once('value');
+            const data = snap.val();
+            if (data) {
+                const msg = Object.values(data)[0];
+                lastMsgEl.textContent = msg.text || '🖼️ Стикер';
+                timeEl.textContent = formatTime(msg.timestamp);
+            } else {
+                lastMsgEl.textContent = 'Нет сообщений';
+                timeEl.textContent = '';
+            }
+        }
+
+        function switchChat(chat) {
+            if (currentChat === chat) return;
+            stopListening(currentChat);
+            currentChat = chat;
+            listenToChat(chat);
+            updatePanelHeader(chat);
+            renderChatList();
+            closeSidebar();
+            localStorage.setItem('chat_current', chat);
         }
 
         function updatePanelHeader(chat) {
@@ -732,150 +724,27 @@
                 panelName.textContent = 'Глобальный чат';
                 panelAvatar.innerHTML = '🌍';
                 panelStatus.textContent = 'онлайн';
+                panelStatus.style.color = '#4caf84';
             } else {
-                const user = users[chat] || { name: chat, avatar: '' };
+                const user = usersCache[chat] || { name: chat, avatar: '' };
                 panelName.textContent = user.name || chat;
-                panelStatus.textContent = (user.status === 'online') ? 'онлайн' : 'офлайн';
+                const online = isUserOnline(chat);
+                panelStatus.textContent = online ? 'онлайн' : 'офлайн';
+                panelStatus.style.color = online ? '#4caf84' : 'var(--text2)';
                 if (user.avatar) {
-                    panelAvatar.innerHTML = `<img src="${user.avatar}" alt="" onerror="this.style.display='none';this.parentElement.textContent='${(user.name||'?').charAt(0).toUpperCase()}'">`;
+                    panelAvatar.innerHTML = `<img src="${user.avatar}" onerror="this.parentElement.textContent='${(user.name||'?').charAt(0).toUpperCase()}'">`;
                 } else {
-                    panelAvatar.textContent = (user.name || '?').charAt(0).toUpperCase();
+                    panelAvatar.textContent = (user.name || chat).charAt(0).toUpperCase();
                 }
             }
         }
 
         // ============================================================
-        // УПРАВЛЕНИЕ САЙДБАРОМ (телефон)
+        // САЙДБАР (мобильный)
         // ============================================================
-        function openSidebar() {
-            sidebar.classList.add('open');
-            chatPanel.classList.add('shifted');
-        }
-        function closeSidebar() {
-            sidebar.classList.remove('open');
-            chatPanel.classList.remove('shifted');
-        }
-        function toggleSidebar() {
-            if (sidebar.classList.contains('open')) {
-                closeSidebar();
-            } else {
-                openSidebar();
-            }
-        }
-
-        // ============================================================
-        // ДОБАВЛЕНИЕ КОНТАКТА
-        // ============================================================
-        function openAddContact() {
-            addContactModal.classList.add('open');
-            contactInput.value = '';
-            contactInput.focus();
-        }
-        async function addContact() {
-            const username = contactInput.value.trim();
-            if (!username) { alert('Введите ник'); return; }
-            if (username === currentUser.username) { alert('Это вы'); return; }
-            const userData = await dbGet(`users/${username}`);
-            if (!userData) {
-                alert('Пользователь не найден');
-                return;
-            }
-            addContactModal.classList.remove('open');
-            // Загружаем сообщения с этим пользователем (если есть)
-            await loadMessages(username);
-            currentChat = username;
-            refreshCurrentChat();
-            renderChatList();
-            updatePanelHeader(username);
-            closeSidebar();
-        }
-
-        // ============================================================
-        // СТИКЕРЫ (модалка)
-        // ============================================================
-        let stickerTab = 'saved';
-
-        function openStickerModal() {
-            stickerModal.classList.add('open');
-            stickerSearchInput.value = '';
-            stickerTab = 'saved';
-            updateStickerTabs();
-            renderStickers('saved');
-        }
-        function closeStickerModalFn() { stickerModal.classList.remove('open'); }
-        function updateStickerTabs() {
-            stickerTabs.forEach(btn => btn.classList.toggle('active', btn.dataset.tab === stickerTab));
-        }
-
-        async function renderStickers(tab) {
-            stickerGrid.innerHTML = '';
-            if (tab === 'saved') {
-                if (stickerList.length === 0) {
-                    stickerGrid.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:var(--text2); padding:20px;">Нет сохранённых стикеров. Добавьте свой URL или найдите в поиске и сохраните.</div>';
-                } else {
-                    stickerList.forEach(url => {
-                        const img = document.createElement('img');
-                        img.src = url;
-                        img.alt = 'стикер';
-                        img.onerror = () => img.style.display = 'none';
-                        img.addEventListener('click', () => {
-                            sendMessage('', url);
-                            closeStickerModalFn();
-                        });
-                        stickerGrid.appendChild(img);
-                    });
-                }
-                const addDiv = document.createElement('div');
-                addDiv.style.cssText = 'display:flex; flex-direction:column; gap:4px; align-items:center; justify-content:center; border:2px dashed var(--border); border-radius:8px; padding:6px; cursor:pointer;';
-                addDiv.innerHTML = `<span style="font-size:20px;">➕</span><span style="font-size:11px; color:var(--text2);">Добавить</span>`;
-                addDiv.addEventListener('click', () => {
-                    const url = prompt('Введите URL картинки/гифки:');
-                    if (url) addSticker(url);
-                });
-                stickerGrid.appendChild(addDiv);
-            } else {
-                const query = stickerSearchInput.value.trim() || 'funny cat';
-                const results = await searchGiphy(query);
-                if (results.length === 0) {
-                    stickerGrid.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:var(--text2); padding:20px;">Ничего не найдено. Попробуйте другой запрос.</div>';
-                    return;
-                }
-                results.forEach(url => {
-                    const wrapper = document.createElement('div');
-                    wrapper.style.position = 'relative';
-                    const img = document.createElement('img');
-                    img.src = url;
-                    img.alt = 'gif';
-                    img.onerror = () => img.style.display = 'none';
-                    img.addEventListener('click', () => {
-                        sendMessage('', url);
-                        closeStickerModalFn();
-                    });
-                    const saveBtn = document.createElement('button');
-                    saveBtn.textContent = '💾';
-                    saveBtn.style.cssText = 'position:absolute; bottom:4px; right:4px; background:rgba(0,0,0,0.6); border:none; border-radius:50%; color:#fff; width:26px; height:26px; cursor:pointer; font-size:13px;';
-                    saveBtn.addEventListener('click', async (e) => {
-                        e.stopPropagation();
-                        await addSticker(url);
-                        alert('Стикер сохранён!');
-                    });
-                    wrapper.appendChild(img);
-                    wrapper.appendChild(saveBtn);
-                    stickerGrid.appendChild(wrapper);
-                });
-            }
-        }
-
-        stickerTabs.forEach(btn => {
-            btn.addEventListener('click', () => {
-                stickerTab = btn.dataset.tab;
-                updateStickerTabs();
-                renderStickers(stickerTab);
-            });
-        });
-        stickerSearchInput.addEventListener('input', () => {
-            if (stickerTab === 'search') renderStickers('search');
-        });
+        function openSidebar() { sidebar.classList.add('open'); chatPanel.classList.add('shifted'); }
+        function closeSidebar() { sidebar.classList.remove('open'); chatPanel.classList.remove('shifted'); }
+        function toggleSidebar() { sidebar.classList.contains('open') ? closeSidebar() : openSidebar(); }
 
         // ============================================================
         // УВЕДОМЛЕНИЯ
@@ -884,62 +753,40 @@
             toast.textContent = text;
             toast.classList.add('show');
             clearTimeout(toast._timer);
-            toast._timer = setTimeout(() => {
-                toast.classList.remove('show');
-            }, 5000);
+            toast._timer = setTimeout(() => toast.classList.remove('show'), 4000);
+        }
+        function notify(msg) {
+            if (Notification.permission === 'default') Notification.requestPermission();
+            if (Notification.permission === 'granted') {
+                new Notification(`Новое сообщение от ${msg.sender}`, {
+                    body: msg.text || '🖼️ Стикер',
+                    icon: 'https://cdn-icons-png.flaticon.com/512/1044/1044342.png'
+                });
+            }
         }
 
         // ============================================================
-        // РАЗМЕРЫ ЭКРАНА
+        // РАЗМЕР ЭКРАНА
         // ============================================================
         function updateScreenSize() {
-            const w = window.innerWidth;
-            const h = window.innerHeight;
-            screenSizeDisplay.textContent = '📐 ' + w + '×' + h;
+            const w = window.innerWidth, h = window.innerHeight;
+            screenSizeDisplay.textContent = `📐 ${w}×${h}`;
             if (settingsScreenWidth) settingsScreenWidth.textContent = w;
             if (settingsScreenHeight) settingsScreenHeight.textContent = h;
         }
-        window.addEventListener('resize', updateScreenSize);
-
-        // Клик – копирование в буфер
         screenSizeDisplay.addEventListener('click', () => {
-            const text = screenSizeDisplay.textContent.replace('📐 ', '');
-            if (navigator.clipboard) {
-                navigator.clipboard.writeText(text).then(() => {
-                    showToast('Скопировано: ' + text);
-                }).catch(() => {
-                    fallbackCopy(text);
-                });
-            } else {
-                fallbackCopy(text);
-            }
+            const size = `${window.innerWidth}×${window.innerHeight}`;
+            navigator.clipboard?.writeText(size).then(() => showToast('Скопировано: ' + size)).catch(() => showToast('Не удалось скопировать'));
         });
-        function fallbackCopy(text) {
-            const range = document.createRange();
-            range.selectNode(screenSizeDisplay);
-            window.getSelection().removeAllRanges();
-            window.getSelection().addRange(range);
-            document.execCommand('copy');
-            showToast('Скопировано: ' + text);
-        }
 
         // ============================================================
-        // НАСТРОЙКИ
+        // ТЕМА
         // ============================================================
         function applyTheme(theme) {
             document.documentElement.setAttribute('data-theme', theme);
             localStorage.setItem('chat_theme', theme);
-            document.querySelectorAll('.theme-toggle button').forEach(b => b.classList.remove('active'));
-            if (theme === 'dark') themeDark.classList.add('active');
-            else themeLight.classList.add('active');
-        }
-
-        async function updateAvatar(url) {
-            if (!currentUser) return;
-            await dbPatch(`users/${currentUser.username}`, { avatar: url });
-            currentUser.avatar = url;
-            renderChatList();
-            updatePanelHeader(currentChat);
+            themeDark.classList.toggle('active', theme === 'dark');
+            themeLight.classList.toggle('active', theme === 'light');
         }
 
         // ============================================================
@@ -950,89 +797,55 @@
             d.textContent = text;
             return d.innerHTML;
         }
-        function timeStr(ts) {
-            return new Date(ts).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+        function formatTime(ts) {
+            if (!ts) return '';
+            const d = new Date(ts);
+            return d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
         }
-
-        // ============================================================
-        // ПОЛЛИНГ
-        // ============================================================
-        function startPolling() {
-            if (pollInterval) clearInterval(pollInterval);
-            pollInterval = setInterval(async () => {
-                if (!currentUser) return;
-                await loadUsers();
-                await loadStickers();
-                await refreshCurrentChat();
-                renderChatList();
-                await dbPatch(`users/${currentUser.username}`, { status: 'online', lastSeen: Date.now() });
-            }, 3000);
-        }
-
-        // ============================================================
-        // ФОКУС ОКНА
-        // ============================================================
-        document.addEventListener('visibilitychange', () => {
-            isChatFocused = document.visibilityState === 'visible';
-            if (isChatFocused) {
-                lastNotifiedMsgId = null;
-                toast.classList.remove('show');
-            }
-        });
 
         // ============================================================
         // ИНИЦИАЛИЗАЦИЯ
         // ============================================================
+        async function loadUsersCache() {
+            const snap = await db.ref('users').once('value');
+            usersCache = snap.val() || {};
+        }
+
         async function initApp() {
-            await loadUsers();
+            await loadUsersCache();
             await loadStickers();
-            await loadMessages('global');
-            const savedChat = localStorage.getItem('chat_current');
-            if (savedChat && savedChat !== 'global' && users[savedChat]) {
-                currentChat = savedChat;
-                await loadMessages(savedChat);
-            } else {
+            setupPresence();
+            listenPresence();
+
+            // Слушаем глобальный чат по умолчанию
+            currentChat = localStorage.getItem('chat_current') || 'global';
+            if (currentChat !== 'global' && !usersCache[currentChat]) {
                 currentChat = 'global';
             }
-            refreshCurrentChat();
-            renderChatList();
+            listenToChat(currentChat);
             updatePanelHeader(currentChat);
-            startPolling();
-            updateScreenSize();
+            renderChatList();
 
             // Обработчики
             sendBtn.addEventListener('click', () => sendMessage(messageInput.value));
-            messageInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') sendMessage(messageInput.value); });
-            catBtn.addEventListener('click', openStickerModal);
-            closeStickerModal.addEventListener('click', closeStickerModalFn);
-            stickerModal.addEventListener('click', (e) => {
-                if (e.target === stickerModal) closeStickerModalFn();
-            });
+            messageInput.addEventListener('keydown', e => { if (e.key === 'Enter') sendMessage(messageInput.value); });
+            stickerBtn.addEventListener('click', openStickerModal);
+            closeStickerModal.addEventListener('click', () => stickerModal.classList.remove('open'));
+            stickerModal.addEventListener('click', e => { if (e.target === stickerModal) stickerModal.classList.remove('open'); });
 
             menuBtn.addEventListener('click', toggleSidebar);
+            chatGlobal.addEventListener('click', () => switchChat('global'));
 
-            chatGlobal.addEventListener('click', () => {
-                if (currentChat === 'global') return;
-                currentChat = 'global';
-                refreshCurrentChat();
-                renderChatList();
-                updatePanelHeader('global');
-                closeSidebar();
-                localStorage.setItem('chat_current', 'global');
-            });
-
-            document.addEventListener('click', (e) => {
-                if (window.innerWidth <= 700 && sidebar.classList.contains('open')) {
-                    if (!sidebar.contains(e.target) && e.target !== menuBtn) {
-                        closeSidebar();
-                    }
+            document.addEventListener('click', e => {
+                if (window.innerWidth <= 700 && sidebar.classList.contains('open') && !sidebar.contains(e.target) && e.target !== menuBtn) {
+                    closeSidebar();
                 }
             });
 
-            addContactBtn.addEventListener('click', openAddContact);
-            confirmAddContact.addEventListener('click', addContact);
+            addContactBtn.addEventListener('click', () => addContactModal.classList.add('open'));
             closeModal.addEventListener('click', () => addContactModal.classList.remove('open'));
-            contactInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') addContact(); });
+            confirmAddContact.addEventListener('click', addContact);
+            contactInput.addEventListener('keydown', e => { if (e.key === 'Enter') addContact(); });
 
             settingsBtn.addEventListener('click', () => {
                 settingsPanel.classList.add('open');
@@ -1041,23 +854,117 @@
             });
             settingsBack.addEventListener('click', () => settingsPanel.classList.remove('open'));
             avatarUrlInput.addEventListener('change', async () => {
-                await updateAvatar(avatarUrlInput.value);
+                await updateProfile({ avatar: avatarUrlInput.value.trim() });
+                usersCache[currentUser.username].avatar = avatarUrlInput.value.trim();
+                renderChatList();
+                updatePanelHeader(currentChat);
             });
             themeDark.addEventListener('click', () => applyTheme('dark'));
             themeLight.addEventListener('click', () => applyTheme('light'));
-            settingsLogout.addEventListener('click', async () => {
-                await logoutUser();
-                clearInterval(pollInterval);
-                currentUser = null;
-                chatApp.style.display = 'none';
-                loginScreen.style.display = 'flex';
-                loginInput.value = '';
-                passInput.value = '';
-                loginError.textContent = '';
-            });
+            settingsLogout.addEventListener('click', logout);
 
-            if (currentChat !== 'global') localStorage.setItem('chat_current', currentChat);
-            else localStorage.removeItem('chat_current');
+            updateScreenSize();
+            window.addEventListener('resize', updateScreenSize);
+        }
+
+        async function addContact() {
+            const username = contactInput.value.trim();
+            if (!username) return;
+            if (username === currentUser.username) { alert('Это вы'); return; }
+            const snap = await db.ref(`users/${username}`).once('value');
+            if (!snap.exists()) { alert('Пользователь не найден'); return; }
+            usersCache[username] = snap.val();
+            addContactModal.classList.remove('open');
+            switchChat(username);
+            renderChatList();
+        }
+
+        function openStickerModal() {
+            stickerModal.classList.add('open');
+            stickerSearchInput.value = '';
+            document.querySelector('.sticker-tabs button[data-tab="saved"]').classList.add('active');
+            document.querySelector('.sticker-tabs button[data-tab="search"]').classList.remove('active');
+            renderStickers('saved');
+        }
+
+        let currentStickerTab = 'saved';
+        function renderStickers(tab) {
+            currentStickerTab = tab;
+            stickerGrid.innerHTML = '';
+            if (tab === 'saved') {
+                stickerCache.forEach(url => {
+                    const img = document.createElement('img');
+                    img.src = url;
+                    img.onerror = () => img.style.display = 'none';
+                    img.addEventListener('click', () => {
+                        sendMessage('', url);
+                        stickerModal.classList.remove('open');
+                    });
+                    stickerGrid.appendChild(img);
+                });
+                const addDiv = document.createElement('div');
+                addDiv.style.cssText = 'display:flex;flex-direction:column;align-items:center;justify-content:center;border:2px dashed var(--border);border-radius:8px;padding:6px;cursor:pointer;';
+                addDiv.innerHTML = '<span style="font-size:20px;">➕</span><span style="font-size:11px;color:var(--text2);">Добавить</span>';
+                addDiv.addEventListener('click', () => {
+                    const url = prompt('Введите URL картинки/гифки:');
+                    if (url) addStickerUrl(url);
+                });
+                stickerGrid.appendChild(addDiv);
+            } else {
+                const query = stickerSearchInput.value.trim() || 'funny cat';
+                searchGiphy(query).then(results => {
+                    if (!results.length) {
+                        stickerGrid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:var(--text2);padding:20px;">Ничего не найдено</div>';
+                        return;
+                    }
+                    results.forEach(url => {
+                        const wrapper = document.createElement('div');
+                        wrapper.style.position = 'relative';
+                        const img = document.createElement('img');
+                        img.src = url;
+                        img.onerror = () => img.style.display = 'none';
+                        img.addEventListener('click', () => {
+                            sendMessage('', url);
+                            stickerModal.classList.remove('open');
+                        });
+                        const saveBtn = document.createElement('button');
+                        saveBtn.textContent = '💾';
+                        saveBtn.style.cssText = 'position:absolute;bottom:4px;right:4px;background:rgba(0,0,0,0.6);border:none;border-radius:50%;color:#fff;width:26px;height:26px;cursor:pointer;font-size:13px;';
+                        saveBtn.addEventListener('click', e => {
+                            e.stopPropagation();
+                            addStickerUrl(url);
+                        });
+                        wrapper.appendChild(img);
+                        wrapper.appendChild(saveBtn);
+                        stickerGrid.appendChild(wrapper);
+                    });
+                });
+            }
+        }
+        stickerTabs.forEach(btn => {
+            btn.addEventListener('click', () => {
+                stickerTabs.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                renderStickers(btn.dataset.tab);
+            });
+        });
+        stickerSearchInput.addEventListener('input', () => {
+            if (currentStickerTab === 'search') renderStickers('search');
+        });
+
+        async function logout() {
+            if (currentUser) {
+                db.ref(`presence/${currentUser.username}`).remove();
+                await db.ref(`users/${currentUser.username}`).update({ status: 'offline', lastSeen: Date.now() });
+            }
+            localStorage.removeItem('chat_user');
+            localStorage.removeItem('chat_pass');
+            currentUser = null;
+            chatApp.style.display = 'none';
+            loginScreen.style.display = 'flex';
+            settingsPanel.classList.remove('open');
+            // Отписываемся от всех слушателей
+            Object.keys(chatListeners).forEach(chat => stopListening(chat));
         }
 
         // ============================================================
@@ -1082,31 +989,14 @@
                 await initApp();
             } catch (err) {
                 loginError.textContent = err.message;
-                throw err;
             }
         }
 
-        async function autoLogin() {
-            const savedUser = localStorage.getItem('chat_user');
-            const savedPass = localStorage.getItem('chat_pass');
-            if (savedUser && savedPass) {
-                loginInput.value = savedUser;
-                passInput.value = savedPass;
-                rememberCheck.checked = true;
-                try {
-                    await doLogin(savedUser, savedPass, true);
-                    return true;
-                } catch { return false; }
-            }
-            return false;
-        }
-
-        loginBtn.addEventListener('click', async () => {
-            const u = loginInput.value.trim();
-            const p = passInput.value.trim();
+        loginBtn.addEventListener('click', () => {
+            const u = loginInput.value.trim(), p = passInput.value.trim();
             if (!u || !p) { loginError.textContent = 'Заполните все поля'; return; }
             loginError.textContent = '';
-            await doLogin(u, p, rememberCheck.checked);
+            doLogin(u, p, rememberCheck.checked);
         });
         toggleLogin.addEventListener('click', () => {
             isLogin = !isLogin;
@@ -1115,24 +1005,25 @@
             loginError.textContent = '';
         });
 
-        // ============================================================
-        // ЗАПУСК
-        // ============================================================
+        // Автовход
         (async function() {
             const savedTheme = localStorage.getItem('chat_theme') || 'dark';
             applyTheme(savedTheme);
-            const logged = await autoLogin();
-            if (!logged) {
+            const savedUser = localStorage.getItem('chat_user');
+            const savedPass = localStorage.getItem('chat_pass');
+            if (savedUser && savedPass) {
+                loginInput.value = savedUser;
+                passInput.value = savedPass;
+                rememberCheck.checked = true;
+                try {
+                    await doLogin(savedUser, savedPass, true);
+                } catch {
+                    loginScreen.style.display = 'flex';
+                }
+            } else {
                 loginScreen.style.display = 'flex';
-                chatApp.style.display = 'none';
             }
         })();
-
-        window.addEventListener('beforeunload', () => {
-            if (currentUser) {
-                dbPatch(`users/${currentUser.username}`, { status: 'offline', lastSeen: Date.now() });
-            }
-        });
     </script>
 </body>
 </html>
