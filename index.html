@@ -3,1027 +3,1113 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Мессенджер</title>
+    <title>Discord Мессенджер</title>
     <style>
         :root {
-            --bg: #0e0e0e;
-            --bg2: #1a1a1a;
-            --bg3: #242424;
-            --bg-hover: #2e2e2e;
-            --bg-input: #242424;
-            --bg-msg-self: #2a6fdb;
-            --bg-msg-other: #242424;
-            --text: #e4e4e4;
-            --text2: #888;
-            --border: #2b2b2b;
-            --avatar-bg: #2a6fdb;
-            --shadow: rgba(0,0,0,0.5);
-            --transition: 0.2s ease;
+            --bg-primary: #313338;
+            --bg-secondary: #2b2d31;
+            --bg-tertiary: #1e1f22;
+            --bg-input: #383a40;
+            --text-primary: #dbdee1;
+            --text-secondary: #949ba4;
+            --text-muted: #6d6f78;
+            --interactive-normal: #b5bac1;
+            --interactive-hover: #dbdee1;
+            --interactive-active: #ffffff;
+            --brand: #5865f2;
+            --brand-hover: #4752c4;
+            --red: #ed4245;
+            --green: #23a55a;
+            --yellow: #f0b232;
+            --border: #3f4147;
+            --server-bar-width: 60px;
+            --channel-bar-width: 280px;
+            --creator-badge: #ffd700;
+            --owner-color: #ff4444;
         }
         [data-theme="light"] {
-            --bg: #ffffff;
-            --bg2: #f0f2f5;
-            --bg3: #e4e6eb;
-            --bg-hover: #d1d5db;
-            --bg-input: #f0f2f5;
-            --bg-msg-self: #0084ff;
-            --bg-msg-other: #e4e6eb;
-            --text: #050505;
-            --text2: #65676b;
-            --border: #ced0d4;
-            --avatar-bg: #0084ff;
-            --shadow: rgba(0,0,0,0.1);
+            --bg-primary: #ffffff;
+            --bg-secondary: #f2f3f5;
+            --bg-tertiary: #e3e5e8;
+            --bg-input: #edeff2;
+            --text-primary: #313338;
+            --text-secondary: #5c5e66;
+            --text-muted: #818491;
+            --interactive-normal: #4e5058;
+            --interactive-hover: #313338;
+            --interactive-active: #060607;
+            --border: #d9dadd;
         }
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
-        body { background: var(--bg); color: var(--text); height: 100vh; overflow: hidden; transition: background .2s; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'gg sans', 'Noto Sans', Helvetica, Arial, sans-serif; }
+        body { background: var(--bg-primary); color: var(--text-primary); height: 100vh; overflow: hidden; display: flex; }
 
-        #loginScreen { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; gap: 14px; padding: 20px; background: var(--bg); }
-        #loginScreen h1 { font-size: 32px; }
-        #loginScreen input { width: 300px; max-width: 90%; padding: 14px 18px; border-radius: 40px; border: none; background: var(--bg-input); color: var(--text); font-size: 16px; outline: none; }
-        #loginScreen .btn { width: 300px; max-width: 90%; padding: 14px; border: none; border-radius: 40px; background: var(--avatar-bg); color: #fff; font-weight: 600; font-size: 16px; cursor: pointer; }
-        #loginScreen .toggle-link { color: var(--text2); cursor: pointer; font-size: 14px; text-decoration: underline; }
-        #loginScreen .error { color: #e74c3c; font-size: 14px; min-height: 20px; }
-        #loginScreen .remember { display: flex; align-items: center; gap: 8px; color: var(--text2); font-size: 14px; }
+        /* LOGIN */
+        #loginScreen { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; gap: 14px; padding: 20px; background: var(--bg-primary); }
+        #loginScreen .logo { font-size: 48px; margin-bottom: 10px; }
+        #loginScreen h1 { font-size: 24px; font-weight: 600; }
+        #loginScreen input { width: 300px; max-width: 90%; padding: 12px 16px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-input); color: var(--text-primary); font-size: 16px; outline: none; }
+        #loginScreen .btn { width: 300px; max-width: 90%; padding: 12px; border: none; border-radius: 8px; background: var(--brand); color: #fff; font-weight: 600; font-size: 16px; cursor: pointer; }
+        #loginScreen .btn:hover { background: var(--brand-hover); }
+        #loginScreen .error { color: var(--red); font-size: 14px; min-height: 20px; }
 
-        #chatApp { display: none; height: 100vh; background: var(--bg); flex-direction: column; }
+        /* BANNED SCREEN */
+        #bannedScreen { display: none; flex-direction: column; align-items: center; justify-content: center; width: 100%; height: 100vh; background: var(--bg-primary); color: var(--text-primary); gap: 20px; }
+        #bannedScreen h1 { font-size: 28px; color: var(--red); }
+        #bannedScreen p { color: var(--text-secondary); font-size: 16px; }
+        #bannedScreen .btn { padding: 12px 24px; background: var(--red); color: #fff; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; }
 
-        .top-bar {
-            display: flex;
-            align-items: center;
-            padding: 6px 12px;
-            background: var(--bg2);
-            border-bottom: 1px solid var(--border);
-            gap: 8px;
-            flex-shrink: 0;
-            z-index: 30;
-            position: relative;
+        /* MAIN */
+        #chatApp { display: none; width: 100%; height: 100vh; flex-direction: row; }
+        .server-bar {
+            width: var(--server-bar-width); background: var(--bg-tertiary); display: flex;
+            flex-direction: column; align-items: center; padding: 12px 0; gap: 8px; overflow-y: auto; flex-shrink: 0; z-index: 10;
         }
-        .top-bar .menu-btn, .top-bar .settings-btn {
-            background: none;
-            border: none;
-            color: var(--text);
-            font-size: 20px;
-            cursor: pointer;
-            flex-shrink: 0;
+        .server-icon {
+            width: 48px; height: 48px; border-radius: 50%; background: var(--bg-primary);
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: all .15s; position: relative;
+            color: var(--text-primary); font-weight: 600; font-size: 18px;
+            flex-shrink: 0; overflow: hidden; border: 2px solid transparent;
         }
-        .top-bar .title {
-            flex: 1;
-            font-weight: 600;
-            font-size: 16px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            min-width: 0;
-        }
-        .top-bar .screen-size {
-            font-size: 14px;
-            font-weight: 500;
-            background: var(--bg3);
-            padding: 2px 10px;
-            border-radius: 16px;
-            border: 1px solid var(--border);
-            white-space: nowrap;
-            cursor: pointer;
-            flex-shrink: 0;
-        }
+        .server-icon:hover { border-radius: 16px; background: var(--brand); color: #fff; }
+        .server-icon.active { border-radius: 16px; background: var(--brand); color: #fff; border-color: var(--interactive-active); }
+        .server-icon img { width: 100%; height: 100%; object-fit: cover; }
+        .server-bar .separator { width: 32px; height: 2px; background: var(--border); border-radius: 1px; margin: 4px 0; }
 
-        .app-layout { display: flex; flex: 1; overflow: hidden; }
-
-        .sidebar {
-            width: 300px;
-            background: var(--bg2);
-            border-right: 1px solid var(--border);
-            display: flex;
-            flex-direction: column;
-            flex-shrink: 0;
-            transition: transform .25s ease;
-            z-index: 20;
+        .channel-bar {
+            width: var(--channel-bar-width); background: var(--bg-secondary); display: flex;
+            flex-direction: column; flex-shrink: 0; border-right: 1px solid var(--border); z-index: 5;
         }
-        .sidebar-header { padding: 10px 16px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
-        .sidebar-header h2 { font-size: 17px; }
-        .sidebar-header .add-btn { background: none; border: none; color: var(--avatar-bg); font-size: 22px; cursor: pointer; }
-        .chat-list { flex: 1; overflow-y: auto; padding: 6px 0; }
-        .chat-item { display: flex; align-items: center; gap: 10px; padding: 8px 14px; cursor: pointer; border-left: 3px solid transparent; transition: background .2s; }
-        .chat-item:hover { background: var(--bg-hover); }
-        .chat-item.active { background: var(--bg-hover); border-left-color: var(--avatar-bg); }
-        .chat-item .avatar { width: 38px; height: 38px; border-radius: 50%; background: var(--avatar-bg); display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 16px; color: #fff; flex-shrink: 0; overflow: hidden; }
-        .chat-item .avatar img { width: 100%; height: 100%; object-fit: cover; }
-        .chat-item .info { flex: 1; overflow: hidden; }
-        .chat-item .info .name { font-weight: 500; font-size: 14px; }
-        .chat-item .info .last-msg { font-size: 12px; color: var(--text2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .chat-item .time { font-size: 11px; color: var(--text2); flex-shrink: 0; }
-
-        .chat-panel {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            background: var(--bg);
-            min-width: 0;
-            transition: opacity .2s;
+        .channel-bar-header {
+            padding: 16px; border-bottom: 1px solid var(--border); font-weight: 600; font-size: 15px;
+            display: flex; justify-content: space-between; align-items: center; cursor: pointer;
         }
-        .chat-panel-header { padding: 8px 14px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; background: var(--bg2); flex-shrink: 0; }
-        .chat-panel-header .avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--avatar-bg); display: flex; align-items: center; justify-content: center; font-weight: 600; color: #fff; flex-shrink: 0; overflow: hidden; }
-        .chat-panel-header .avatar img { width: 100%; height: 100%; object-fit: cover; }
-        .chat-panel-header .name { font-weight: 500; font-size: 15px; }
-        .chat-panel-header .status { font-size: 12px; color: var(--text2); }
-
-        .messages-area { flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 4px; background: var(--bg); }
-        .msg { max-width: 80%; padding: 6px 12px; border-radius: 14px; line-height: 1.4; font-size: 14px; word-wrap: break-word; position: relative; animation: fadeInUp 0.3s; }
-        @keyframes fadeInUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
-        .msg.self { align-self: flex-end; background: var(--bg-msg-self); color: #fff; border-bottom-right-radius: 4px; }
-        .msg.other { align-self: flex-start; background: var(--bg-msg-other); color: var(--text); border-bottom-left-radius: 4px; }
-        .msg .time { font-size: 10px; opacity: 0.6; margin-top: 2px; display: block; }
-        .msg .del { background: none; border: none; color: #f87171; cursor: pointer; font-size: 11px; margin-left: 6px; opacity: 0.5; }
-        .msg .del:hover { opacity: 1; }
-        .msg img { max-width: 160px; max-height: 120px; border-radius: 8px; margin-top: 4px; display: block; cursor: pointer; }
-
-        .input-area {
-            padding: 6px 10px;
-            border-top: 1px solid var(--border);
-            background: var(--bg2);
-            display: flex;
-            gap: 5px;
-            align-items: center;
-            flex-shrink: 0;
+        .channel-list { flex: 1; overflow-y: auto; padding: 8px 0; }
+        .channel-category { padding: 12px 16px 4px; font-size: 12px; font-weight: 600; text-transform: uppercase; color: var(--text-muted); display: flex; justify-content: space-between; align-items: center; }
+        .channel-item {
+            padding: 8px 16px; margin: 2px 8px; border-radius: 6px; cursor: pointer;
+            display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--text-secondary);
         }
-        .input-area input[type="text"] {
-            flex: 1;
-            padding: 8px 12px;
-            border-radius: 18px;
-            border: none;
-            background: var(--bg-input);
-            color: var(--text);
-            font-size: 14px;
-            outline: none;
-            min-width: 0;
+        .channel-item:hover { background: var(--bg-input); color: var(--text-primary); }
+        .channel-item.active { background: var(--bg-input); color: var(--interactive-active); }
+        .channel-item .badge { font-size: 10px; background: var(--creator-badge); color: #000; padding: 1px 4px; border-radius: 4px; margin-left: auto; }
+        .channel-item .owner-badge { font-size: 10px; background: var(--owner-color); color: #fff; padding: 1px 4px; border-radius: 4px; margin-left: auto; }
+        .channel-item .banned-badge { font-size: 10px; background: var(--red); color: #fff; padding: 1px 4px; border-radius: 4px; margin-left: auto; }
+        .user-panel {
+            padding: 10px; background: var(--bg-secondary); border-top: 1px solid var(--border);
+            display: flex; align-items: center; gap: 8px;
         }
-        .input-area .btn {
-            padding: 6px 12px;
-            border: none;
-            border-radius: 18px;
-            background: var(--avatar-bg);
-            color: #fff;
-            font-weight: 500;
-            cursor: pointer;
-            font-size: 13px;
-            white-space: nowrap;
-            flex-shrink: 0;
-        }
-        .input-area .btn-sticker { background: #f59e0b; }
-        .input-area .btn-sticker:hover { background: #d97706; }
+        .user-panel .avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--brand); display: flex; align-items: center; justify-content: center; font-weight: 600; color: #fff; overflow: hidden; }
+        .user-panel .avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .user-panel .info .name { font-size: 13px; font-weight: 500; }
+        .user-panel .info .status { font-size: 11px; color: var(--text-muted); }
+        .btn-icon { background: var(--bg-input); color: var(--text-secondary); border: none; font-size: 16px; padding: 6px 10px; border-radius: 6px; cursor: pointer; }
+        .btn-icon:hover { color: var(--interactive-hover); }
 
-        .sticker-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); align-items: center; justify-content: center; z-index: 2000; }
-        .sticker-modal.open { display: flex; }
-        .sticker-modal-content { background: var(--bg2); border-radius: 16px; width: 90%; max-width: 500px; max-height: 80vh; padding: 14px; display: flex; flex-direction: column; overflow: hidden; }
-        .sticker-modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-        .sticker-modal-header input { flex: 1; padding: 6px 12px; border-radius: 16px; border: 1px solid var(--border); background: var(--bg-input); color: var(--text); font-size: 13px; outline: none; margin-right: 8px; }
-        .sticker-modal-header .close { background: none; border: none; color: var(--text); font-size: 22px; cursor: pointer; }
-        .sticker-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 6px; overflow-y: auto; padding: 6px 0; flex: 1; }
-        .sticker-grid img { width: 100%; aspect-ratio: 1/1; object-fit: cover; border-radius: 8px; cursor: pointer; transition: 0.15s; border: 2px solid transparent; }
-        .sticker-grid img:hover { border-color: var(--avatar-bg); transform: scale(1.02); }
-        .sticker-tabs { display: flex; gap: 6px; margin-bottom: 6px; }
-        .sticker-tabs button { padding: 4px 10px; border: none; border-radius: 14px; background: var(--bg3); color: var(--text); cursor: pointer; font-size: 12px; }
-        .sticker-tabs button.active { background: var(--avatar-bg); color: #fff; }
+        .chat-area { flex: 1; display: flex; flex-direction: column; background: var(--bg-primary); min-width: 0; }
+        .chat-header { padding: 12px 16px; border-bottom: 1px solid var(--border); font-weight: 600; font-size: 15px; display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+        .messages-area { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 4px; }
+        .msg { padding: 6px 12px; border-radius: 8px; display: flex; gap: 10px; align-items: flex-start; font-size: 14px; }
+        .msg:hover { background: var(--bg-secondary); }
+        .msg .avatar-small { width: 36px; height: 36px; border-radius: 50%; background: var(--brand); flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-weight: 600; color: #fff; font-size: 14px; overflow: hidden; }
+        .msg .avatar-small img { width: 100%; height: 100%; object-fit: cover; }
+        .msg .content { flex: 1; }
+        .msg .sender { font-weight: 500; font-size: 13px; margin-right: 8px; }
+        .msg .sender .badge { font-size: 10px; background: var(--creator-badge); color: #000; padding: 1px 4px; border-radius: 4px; margin-left: 4px; }
+        .msg .sender .owner-badge { font-size: 10px; background: var(--owner-color); color: #fff; padding: 1px 4px; border-radius: 4px; margin-left: 4px; }
+        .msg .time { font-size: 10px; color: var(--text-muted); margin-left: 4px; }
+        .msg .text { margin-top: 2px; white-space: pre-wrap; }
+        .msg img { max-width: 240px; max-height: 180px; border-radius: 6px; margin-top: 4px; cursor: pointer; }
+        .msg .drawing { font-family: 'Courier New', monospace; white-space: pre; padding: 4px 8px; border-radius: 6px; margin-top: 4px; display: inline-block; }
+        .msg .del { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 12px; padding: 2px 4px; border-radius: 4px; opacity: 0; }
+        .msg:hover .del { opacity: 1; }
 
-        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 1000; }
+        .input-area { padding: 12px 16px; border-top: 1px solid var(--border); background: var(--bg-secondary); display: flex; gap: 8px; align-items: center; }
+        .input-area input[type="text"] { flex: 1; padding: 10px 14px; border-radius: 8px; border: none; background: var(--bg-input); color: var(--text-primary); font-size: 14px; outline: none; }
+        .btn { padding: 8px 14px; border: none; border-radius: 6px; background: var(--brand); color: #fff; font-weight: 500; cursor: pointer; font-size: 13px; }
+        .btn:hover { background: var(--brand-hover); }
+        .btn.red { background: var(--red); }
+        .btn.green { background: var(--green); }
+
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); align-items: center; justify-content: center; z-index: 1000; }
         .modal-overlay.open { display: flex; }
-        .modal { background: var(--bg2); padding: 20px; border-radius: 14px; width: 300px; max-width: 90%; }
-        .modal h3 { margin-bottom: 10px; }
-        .modal input { width: 100%; padding: 10px; border-radius: 18px; border: 1px solid var(--border); background: var(--bg-input); color: var(--text); font-size: 15px; outline: none; margin-bottom: 10px; }
-        .modal .btn { width: 100%; padding: 10px; border: none; border-radius: 18px; background: var(--avatar-bg); color: #fff; font-weight: 600; cursor: pointer; }
-        .modal .btn-close { background: transparent; color: var(--text2); margin-top: 6px; }
+        .modal { background: var(--bg-secondary); padding: 24px; border-radius: 12px; width: 360px; max-width: 90%; max-height: 80vh; overflow-y: auto; }
+        .modal h3 { margin-bottom: 12px; }
+        .modal input, .modal textarea { width: 100%; padding: 10px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-input); color: var(--text-primary); font-size: 14px; outline: none; margin-bottom: 10px; }
+        .modal textarea { resize: vertical; min-height: 100px; font-family: monospace; }
+        .modal .btn { width: 100%; margin-bottom: 6px; }
+        .friends-request-item, .server-request-item { display: flex; align-items: center; justify-content: space-between; padding: 8px; background: var(--bg-input); border-radius: 6px; margin-bottom: 6px; }
+        .toast { position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%); background: var(--bg-tertiary); color: var(--text-primary); padding: 10px 20px; border-radius: 20px; font-size: 13px; z-index: 3000; display: none; }
+        .toast.show { display: block; animation: slideUp 0.3s; }
+        @keyframes slideUp { from { opacity: 0; transform: translateX(-50%) translateY(20px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
 
-        .settings-panel { display: none; position: fixed; inset: 0; background: var(--bg); z-index: 999; padding: 20px; flex-direction: column; gap: 14px; overflow-y: auto; }
-        .settings-panel.open { display: flex; }
-        .settings-panel .back { background: none; border: none; color: var(--text); font-size: 22px; cursor: pointer; align-self: flex-start; }
-        .settings-panel label { font-weight: 500; }
-        .settings-panel input { padding: 8px 12px; border-radius: 16px; border: 1px solid var(--border); background: var(--bg-input); color: var(--text); font-size: 14px; outline: none; }
-        .settings-panel .theme-toggle { display: flex; gap: 10px; margin: 6px 0; }
-        .settings-panel .theme-toggle button { flex: 1; padding: 8px; border: 2px solid var(--border); border-radius: 16px; background: transparent; color: var(--text); cursor: pointer; font-weight: 500; }
-        .settings-panel .theme-toggle button.active { border-color: var(--avatar-bg); background: var(--bg-hover); }
-        .settings-panel .logout-btn { background: #e74c3c; color: #fff; border: none; padding: 10px; border-radius: 16px; font-weight: 600; cursor: pointer; }
-
-        .toast-container {
-            position: fixed;
-            bottom: 70px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: var(--bg2);
-            color: var(--text);
-            padding: 8px 16px;
-            border-radius: 30px;
-            box-shadow: 0 4px 12px var(--shadow);
-            z-index: 3000;
-            display: none;
-            font-size: 13px;
-            border: 1px solid var(--border);
-        }
-        .toast-container.show { display: block; animation: slideUp 0.3s ease; }
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateX(-50%) translateY(20px); }
-            to { opacity: 1; transform: translateX(-50%) translateY(0); }
-        }
-
-        @media (max-width: 700px) {
-            .sidebar {
-                position: absolute;
-                top: 0; left: 0; bottom: 0;
-                width: 260px;
-                transform: translateX(-100%);
-                z-index: 20;
-                background: var(--bg2);
-                box-shadow: 4px 0 20px rgba(0,0,0,0.3);
-            }
-            .sidebar.open { transform: translateX(0); }
-            .chat-panel.shifted { opacity: 0.3; pointer-events: none; }
-            .chat-panel { width: 100%; }
-            .sticker-grid { grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); }
-            .input-area { padding: 4px 8px; gap: 4px; }
-            .input-area input[type="text"] { font-size: 13px; padding: 6px 10px; }
-            .input-area .btn { padding: 5px 10px; font-size: 12px; }
+        @media (max-width: 768px) {
+            :root { --server-bar-width: 48px; --channel-bar-width: 240px; }
+            .channel-bar { position: absolute; left: var(--server-bar-width); top: 0; bottom: 0; z-index: 15; transform: translateX(-100%); transition: transform .25s; box-shadow: 4px 0 20px rgba(0,0,0,0.3); }
+            .channel-bar.open { transform: translateX(0); }
         }
     </style>
 </head>
 <body>
 
-    <!-- ВХОД -->
-    <div id="loginScreen">
-        <h1>📱 Мессенджер</h1>
-        <div id="loginError" class="error"></div>
-        <input type="text" id="loginInput" placeholder="Логин" autocomplete="username">
-        <input type="password" id="passInput" placeholder="Пароль" autocomplete="current-password">
-        <div class="remember">
-            <input type="checkbox" id="rememberCheck" checked> <label for="rememberCheck">Запомнить меня</label>
-        </div>
-        <button class="btn" id="loginBtn">Войти</button>
-        <span class="toggle-link" id="toggleLogin">Нет аккаунта? Зарегистрироваться</span>
-    </div>
+<div id="loginScreen">
+    <div class="logo">🎧</div>
+    <h1>Discord Мессенджер</h1>
+    <p style="color:var(--text-secondary)">Войдите или создайте аккаунт</p>
+    <div id="loginError" class="error"></div>
+    <input type="text" id="loginInput" placeholder="Логин" autocomplete="username">
+    <input type="password" id="passInput" placeholder="Пароль" autocomplete="current-password">
+    <button class="btn" id="loginBtn">Войти</button>
+    <span style="color:var(--text-secondary);cursor:pointer" id="toggleLogin">Нет аккаунта? Зарегистрироваться</span>
+</div>
 
-    <!-- ЧАТ -->
-    <div id="chatApp">
-        <div class="top-bar">
-            <button class="menu-btn" id="menuBtn">☰</button>
-            <span class="title" id="topTitle">Чаты</span>
-            <span class="screen-size" id="screenSizeDisplay" title="Клик – скопировать размер">📐 0×0</span>
-            <button class="settings-btn" id="settingsBtn">⚙️</button>
+<!-- ЭКРАН БАНА -->
+<div id="bannedScreen">
+    <h1>🚫 Вы забанены</h1>
+    <p>Ваш аккаунт заблокирован администратором.</p>
+    <button class="btn" id="bannedLogoutBtn">Выйти</button>
+</div>
+
+<div id="chatApp">
+    <div class="server-bar" id="serverBar"></div>
+    <div class="channel-bar" id="channelBar">
+        <div class="channel-bar-header" id="channelBarHeader">
+            <span id="serverNameHeader">Личные сообщения</span>
+            <span style="display:flex; gap:6px;">
+                <button class="btn-icon" id="findPeopleBtn" title="Поиск людей">🔍</button>
+                <button class="btn-icon" id="findServerBtn" title="Поиск серверов">🔎</button>
+                <button class="btn-icon" id="requestsBtn" title="Заявки в друзья">📩</button>
+                <button class="btn-icon" id="serverIconBtn" title="Изменить иконку сервера" style="display:none;">🖼</button>
+                <button class="btn-icon" id="memberManageBtn" title="Участники и баны" style="display:none;">👥</button>
+                <button class="btn-icon" id="globalBansBtn" title="Глобальные баны" style="display:none;">🚫</button>
+            </span>
         </div>
-        <div class="app-layout">
-            <div class="sidebar" id="sidebar">
-                <div class="sidebar-header">
-                    <h2>Чаты</h2>
-                    <button class="add-btn" id="addContactBtn">➕</button>
-                </div>
-                <div class="chat-list" id="chatList">
-                    <!-- Глобальный чат -->
-                    <div class="chat-item active" data-chat="global" id="chatGlobal">
-                        <div class="avatar">🌍</div>
-                        <div class="info">
-                            <div class="name">Глобальный чат</div>
-                            <div class="last-msg" id="globalLastMsg">Добро пожаловать!</div>
-                        </div>
-                        <div class="time" id="globalTime"></div>
-                    </div>
-                </div>
+        <div class="channel-list" id="channelList"></div>
+        <div class="user-panel">
+            <div class="avatar" id="userPanelAvatar"></div>
+            <div class="info">
+                <div class="name" id="userPanelName"></div>
+                <div class="status" id="userPanelStatus">онлайн</div>
             </div>
-            <div class="chat-panel" id="chatPanel">
-                <div class="chat-panel-header">
-                    <div class="avatar" id="panelAvatar">🌍</div>
-                    <div>
-                        <div class="name" id="panelName">Глобальный чат</div>
-                        <div class="status" id="panelStatus">онлайн</div>
-                    </div>
-                </div>
-                <div class="messages-area" id="messagesArea">
-                    <div style="color:var(--text2); text-align:center; margin-top:40px;">💬 Начните общение</div>
-                </div>
-                <div class="input-area">
-                    <input type="text" id="messageInput" placeholder="Сообщение..." maxlength="500" autocomplete="off">
-                    <button class="btn btn-sticker" id="stickerBtn">🐱</button>
-                    <button class="btn" id="sendBtn">→</button>
-                </div>
-            </div>
+            <button class="btn-icon" id="settingsBtn" title="Настройки">⚙️</button>
+            <button class="btn-icon" id="themeToggle" title="Сменить тему">🌓</button>
         </div>
     </div>
 
-    <!-- МОДАЛКИ -->
-    <div class="modal-overlay" id="addContactModal">
-        <div class="modal">
-            <h3>Добавить контакт</h3>
-            <input type="text" id="contactInput" placeholder="Введите ник пользователя">
-            <button class="btn" id="confirmAddContact">Добавить</button>
-            <button class="btn btn-close" id="closeModal">Отмена</button>
+    <div class="chat-area" id="chatArea">
+        <div class="chat-header">
+            <span>#</span>
+            <span id="chatChannelName">общий</span>
+            <span style="font-size:12px;color:var(--text-muted);margin-left:8px" id="chatTopic"></span>
+        </div>
+        <div class="messages-area" id="messagesArea">
+            <div style="color:var(--text-muted);text-align:center;margin-top:60px;">💬 Начните общение</div>
+        </div>
+        <div class="input-area">
+            <input type="text" id="messageInput" placeholder="Отправить сообщение..." autocomplete="off">
+            <button class="btn-icon" id="gifBtn">GIF</button>
+            <button class="btn-icon" id="drawBtn" title="Текстовый рисунок">🎨</button>
+            <button class="btn" id="sendBtn">Отправить</button>
         </div>
     </div>
+</div>
 
-    <div class="sticker-modal" id="stickerModal">
-        <div class="sticker-modal-content">
-            <div class="sticker-modal-header">
-                <input type="text" id="stickerSearchInput" placeholder="Поиск гифок...">
-                <button class="close" id="closeStickerModal">✕</button>
-            </div>
-            <div class="sticker-tabs">
-                <button class="active" data-tab="saved">📁 Мои</button>
-                <button data-tab="search">🔍 Поиск</button>
-            </div>
-            <div class="sticker-grid" id="stickerGrid"></div>
-        </div>
+<!-- Модалки (все из основы) -->
+<div class="modal-overlay" id="serverModal">
+    <div class="modal">
+        <h3>Создать сервер</h3>
+        <input type="text" id="serverNameInput" placeholder="Название сервера">
+        <button class="btn" id="createServerBtn">Создать</button>
+        <button class="btn close-modal" style="background:transparent;color:var(--text-secondary)">Отмена</button>
     </div>
-
-    <div class="settings-panel" id="settingsPanel">
-        <button class="back" id="settingsBack">← Назад</button>
-        <h2>Настройки</h2>
-        <label>Аватар (URL)</label>
-        <input type="text" id="avatarUrlInput" placeholder="https://example.com/avatar.jpg">
-        <label>Тема</label>
-        <div class="theme-toggle">
-            <button data-theme="dark" id="themeDark">🌙 Тёмная</button>
-            <button data-theme="light" id="themeLight">☀️ Светлая</button>
-        </div>
-        <div style="background:var(--bg3); padding:8px; border-radius:10px; font-size:13px; color:var(--text2); text-align:center; border:1px solid var(--border);">
-            Размер окна: <span id="settingsScreenWidth">0</span> × <span id="settingsScreenHeight">0</span> px
-        </div>
-        <button class="logout-btn" id="settingsLogout">Выйти</button>
+</div>
+<div class="modal-overlay" id="channelModal">
+    <div class="modal">
+        <h3>Создать канал</h3>
+        <input type="text" id="channelNameInput" placeholder="Название канала">
+        <button class="btn" id="createChannelBtn">Создать</button>
+        <button class="btn close-modal" style="background:transparent;color:var(--text-secondary)">Отмена</button>
     </div>
+</div>
+<div class="modal-overlay" id="settingsModal">
+    <div class="modal">
+        <h3>Настройки</h3>
+        <label style="color:var(--text-secondary)">Аватар (URL)</label>
+        <input type="text" id="avatarUrlInput" placeholder="https://...">
+        <button class="btn" id="saveAvatarBtn">Сохранить</button>
+        <button class="btn red" id="logoutBtn">Выйти</button>
+        <button class="btn close-modal" style="background:transparent;color:var(--text-secondary)">Закрыть</button>
+    </div>
+</div>
+<div class="modal-overlay" id="gifModal">
+    <div class="modal" style="max-width:500px;">
+        <h3>Поиск GIF</h3>
+        <input type="text" id="gifSearchInput" placeholder="Введите запрос...">
+        <div id="gifGrid" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(80px,1fr)); gap:6px; max-height:300px; overflow-y:auto; margin:10px 0;"></div>
+        <button class="btn close-modal" style="background:transparent;color:var(--text-secondary)">Закрыть</button>
+    </div>
+</div>
+<div class="modal-overlay" id="drawModal">
+    <div class="modal">
+        <h3>Текстовый рисунок</h3>
+        <textarea id="drawTextInput" placeholder="Введите символы..."></textarea>
+        <div style="display:flex; gap:10px; margin-bottom:10px;">
+            <label style="color:var(--text-secondary)">Цвет текста</label>
+            <input type="color" id="drawColorInput" value="#ffffff">
+        </div>
+        <div style="display:flex; gap:10px; margin-bottom:10px;">
+            <label style="color:var(--text-secondary)">Цвет фона</label>
+            <input type="color" id="drawBgInput" value="#000000">
+        </div>
+        <button class="btn" id="sendDrawBtn">Отправить рисунок</button>
+        <button class="btn close-modal" style="background:transparent;color:var(--text-secondary)">Отмена</button>
+    </div>
+</div>
+<div class="modal-overlay" id="findPeopleModal">
+    <div class="modal">
+        <h3>Поиск пользователя</h3>
+        <input type="text" id="findPeopleInput" placeholder="Введите ник...">
+        <div id="searchResult" style="margin:10px 0; color:var(--text-secondary)"></div>
+        <button class="btn" id="searchUserBtn">Найти</button>
+        <button class="btn close-modal" style="background:transparent;color:var(--text-secondary)">Закрыть</button>
+    </div>
+</div>
+<div class="modal-overlay" id="friendRequestsModal">
+    <div class="modal" style="max-height:70vh; overflow-y:auto;">
+        <h3>Входящие заявки (друзья)</h3>
+        <div id="friendRequestsList" style="color:var(--text-secondary)">Загрузка...</div>
+        <button class="btn close-modal" style="background:transparent;color:var(--text-secondary); margin-top:10px;">Закрыть</button>
+    </div>
+</div>
+<div class="modal-overlay" id="findServerModal">
+    <div class="modal">
+        <h3>Поиск сервера</h3>
+        <input type="text" id="findServerInput" placeholder="Название сервера...">
+        <div id="serverSearchResult" style="margin:10px 0; color:var(--text-secondary)"></div>
+        <button class="btn" id="searchServerBtn">Найти</button>
+        <button class="btn close-modal" style="background:transparent;color:var(--text-secondary)">Закрыть</button>
+    </div>
+</div>
+<div class="modal-overlay" id="serverRequestsModal">
+    <div class="modal" style="max-height:70vh; overflow-y:auto;">
+        <h3>Заявки на сервер</h3>
+        <div id="serverRequestsList" style="color:var(--text-secondary)">Нет заявок</div>
+        <button class="btn close-modal" style="background:transparent;color:var(--text-secondary); margin-top:10px;">Закрыть</button>
+    </div>
+</div>
+<div class="modal-overlay" id="serverIconModal">
+    <div class="modal">
+        <h3>Изменить иконку сервера</h3>
+        <input type="text" id="serverIconInput" placeholder="URL изображения">
+        <button class="btn" id="saveServerIconBtn">Сохранить</button>
+        <button class="btn close-modal" style="background:transparent;color:var(--text-secondary)">Отмена</button>
+    </div>
+</div>
+<div class="modal-overlay" id="memberManageModal">
+    <div class="modal" style="max-width:500px;">
+        <h3>Управление участниками (владелец сервера)</h3>
+        <div id="memberList" style="color:var(--text-secondary)"></div>
+        <div style="margin-top:10px;">
+            <h4>Забанить пользователя</h4>
+            <input type="text" id="banInput" placeholder="Ник">
+            <button class="btn red" id="banBtn">Забанить</button>
+        </div>
+        <div style="margin-top:10px;">
+            <h4>Забаненные</h4>
+            <div id="bannedList" style="color:var(--text-secondary)"></div>
+        </div>
+        <button class="btn close-modal" style="background:transparent;color:var(--text-secondary); margin-top:10px;">Закрыть</button>
+    </div>
+</div>
+<div class="modal-overlay" id="globalBansModal">
+    <div class="modal">
+        <h3>Глобальные баны (только Даниил)</h3>
+        <div id="globalBansList" style="color:var(--text-secondary)"></div>
+        <!-- Поле для ручного бана -->
+        <div style="margin-top:10px;">
+            <input type="text" id="globalBanInput" placeholder="Ник для бана">
+            <button class="btn red" id="globalBanBtn" style="width:auto;">Забанить</button>
+        </div>
+        <button class="btn close-modal" style="background:transparent;color:var(--text-secondary); margin-top:10px;">Закрыть</button>
+    </div>
+</div>
+<div class="toast" id="toast"></div>
 
-    <div class="toast-container" id="toast"></div>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script>
+    const DB_URL = 'https://makc-894d6-default-rtdb.firebaseio.com/';
+    const GIPHY_KEY = 'd6yTgfwrs03OJkuyfjfPiPmNp4fUDbEY';
+    firebase.initializeApp({ databaseURL: DB_URL });
+    const db = firebase.database();
 
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    let currentUser = null;
+    let currentServer = 'direct';
+    let currentChannel = 'global';
+    let isLogin = true;
+    let activeChatPath = '';
+    let chatListener = null;
+    let usersCache = {};
+    let serversCache = {};
+    let friendsCache = {};
+    let presenceData = {};
+    let globalBansCache = {};
 
-    <script>
-        // ============================================================
-        // КОНФИГ
-        // ============================================================
-        const DB_URL = 'https://makc-894d6-default-rtdb.firebaseio.com/';
-        const GIPHY_API_KEY = 'd6yTgfwrs03OJkuyfjfPiPmNp4fUDbEY';
+    const $ = id => document.getElementById(id);
 
-        // Инициализация Firebase
-        firebase.initializeApp({ databaseURL: DB_URL });
-        const db = firebase.database();
+    // ========== АВТОРИЗАЦИЯ ==========
+    async function registerUser(username, password) {
+        const snap = await db.ref(`users/${username}`).once('value');
+        if (snap.exists()) throw new Error('Пользователь уже существует');
+        await db.ref(`users/${username}`).set({ password, name: username, avatar: '' });
+        return { username, name: username, avatar: '' };
+    }
+    async function loginUser(username, password) {
+        const snap = await db.ref(`users/${username}`).once('value');
+        if (!snap.exists()) throw new Error('Пользователь не найден');
+        const u = snap.val();
+        if (u.password !== password) throw new Error('Неверный пароль');
+        return { username, ...u };
+    }
 
-        let currentUser = null;
-        let currentChat = 'global';
-        let isLogin = true;
-        let chatListeners = {}; // для отписки от старых чатов
-        let presenceRef = null;
-        let usersCache = {};
-        let stickerCache = [];
+    async function doLogin(u, p, remember) {
+        try {
+            currentUser = isLogin ? await loginUser(u, p) : await registerUser(u, p);
+            if (remember) { localStorage.setItem('dc_user', u); localStorage.setItem('dc_pass', p); }
+            else { localStorage.removeItem('dc_user'); localStorage.removeItem('dc_pass'); }
+            await loadAllData();
 
-        // DOM элементы
-        const $ = id => document.getElementById(id);
-        const loginScreen = $('loginScreen');
-        const chatApp = $('chatApp');
-        const loginError = $('loginError');
-        const loginInput = $('loginInput');
-        const passInput = $('passInput');
-        const rememberCheck = $('rememberCheck');
-        const loginBtn = $('loginBtn');
-        const toggleLogin = $('toggleLogin');
-        const menuBtn = $('menuBtn');
-        const settingsBtn = $('settingsBtn');
-        const settingsPanel = $('settingsPanel');
-        const settingsBack = $('settingsBack');
-        const avatarUrlInput = $('avatarUrlInput');
-        const themeDark = $('themeDark');
-        const themeLight = $('themeLight');
-        const settingsLogout = $('settingsLogout');
-        const screenSizeDisplay = $('screenSizeDisplay');
-        const settingsScreenWidth = $('settingsScreenWidth');
-        const settingsScreenHeight = $('settingsScreenHeight');
-        const addContactBtn = $('addContactBtn');
-        const addContactModal = $('addContactModal');
-        const contactInput = $('contactInput');
-        const confirmAddContact = $('confirmAddContact');
-        const closeModal = $('closeModal');
-        const chatList = $('chatList');
-        const chatGlobal = $('chatGlobal');
-        const globalLastMsg = $('globalLastMsg');
-        const globalTime = $('globalTime');
-        const panelAvatar = $('panelAvatar');
-        const panelName = $('panelName');
-        const panelStatus = $('panelStatus');
-        const messagesArea = $('messagesArea');
-        const messageInput = $('messageInput');
-        const sendBtn = $('sendBtn');
-        const stickerBtn = $('stickerBtn');
-        const sidebar = $('sidebar');
-        const chatPanel = $('chatPanel');
-        const stickerModal = $('stickerModal');
-        const stickerSearchInput = $('stickerSearchInput');
-        const stickerGrid = $('stickerGrid');
-        const closeStickerModal = $('closeStickerModal');
-        const stickerTabs = document.querySelectorAll('.sticker-tabs button');
-        const toast = $('toast');
-
-        // ============================================================
-        // ПОЛЬЗОВАТЕЛИ (хранение в /users)
-        // ============================================================
-        async function registerUser(username, password) {
-            const snap = await db.ref(`users/${username}`).once('value');
-            if (snap.exists()) throw new Error('Пользователь уже существует');
-            await db.ref(`users/${username}`).set({
-                password,
-                name: username,
-                avatar: '',
-            });
-            return { username, name: username, avatar: '' };
-        }
-
-        async function loginUser(username, password) {
-            const snap = await db.ref(`users/${username}`).once('value');
-            if (!snap.exists()) throw new Error('Пользователь не найден');
-            const user = snap.val();
-            if (user.password !== password) throw new Error('Неверный пароль');
-            return { username, ...user };
-        }
-
-        async function updateProfile(data) {
-            if (!currentUser) return;
-            await db.ref(`users/${currentUser.username}`).update(data);
-            currentUser = { ...currentUser, ...data };
-        }
-
-        // ============================================================
-        // ПРИСУТСТВИЕ (RTDB presence)
-        // ============================================================
-        function setupPresence() {
-            if (!currentUser) return;
-            const userPresenceRef = db.ref(`presence/${currentUser.username}`);
-            userPresenceRef.set({
-                username: currentUser.username,
-                name: currentUser.name,
-                lastSeen: firebase.database.ServerValue.TIMESTAMP,
-            });
-            userPresenceRef.onDisconnect().remove();
-        }
-
-        function listenPresence() {
-            db.ref('presence').on('value', snap => {
-                const data = snap.val() || {};
-                const now = Date.now();
-                // Очистка старых записей (> 5 мин) не на клиенте, просто фильтруем
-                for (let uname in data) {
-                    const user = data[uname];
-                    if (now - user.lastSeen > 300000) {
-                        db.ref(`presence/${uname}`).remove();
-                    }
-                }
-                updateOnlineStatuses();
-            });
-        }
-
-        function updateOnlineStatuses() {
-            // Обновим статусы в списке чатов
-            document.querySelectorAll('.chat-item .status-indicator').forEach(el => el.remove());
-            // Проще не добавлять индикаторы, а обновлять панель заголовка при смене чата
-            if (currentChat !== 'global') {
-                const isOnline = checkOnline(currentChat);
-                panelStatus.textContent = isOnline ? 'онлайн' : 'офлайн';
-                panelStatus.style.color = isOnline ? '#4caf84' : 'var(--text2)';
-            } else {
-                panelStatus.textContent = 'онлайн';
-                panelStatus.style.color = '#4caf84';
-            }
-        }
-
-        function checkOnline(username) {
-            const presence = db.ref('presence').once('value').then(snap => {
-                const data = snap.val() || {};
-                return !!data[username];
-            });
-            // Используем синхронно? Нет, переделаем: будем хранить локальный кеш presence
-            // Для простоты обновим при каждом событии presence
-            return false;
-        }
-        // Более правильно: хранить локальный объект presenceData
-        let presenceData = {};
-        db.ref('presence').on('value', snap => {
-            presenceData = snap.val() || {};
-            updateOnlineStatuses();
-            renderChatList(); // обновить список (можно только статусы)
-        });
-
-        function isUserOnline(username) {
-            return !!presenceData[username];
-        }
-
-        // ============================================================
-        // СООБЩЕНИЯ
-        // ============================================================
-        function getChatPath(chat) {
-            if (chat === 'global') return 'messages/global';
-            const ids = [currentUser.username, chat].sort();
-            return `messages/private/${ids[0]}_${ids[1]}`;
-        }
-
-        function listenToChat(chat) {
-            // Отписываемся от предыдущего слушателя
-            if (chatListeners[chat]) {
-                db.ref(getChatPath(chat)).off('value', chatListeners[chat]);
-            }
-            const callback = snap => {
-                const msgs = [];
-                const data = snap.val();
-                if (data) {
-                    for (let key in data) {
-                        msgs.push({ id: key, ...data[key] });
-                    }
-                    msgs.sort((a, b) => a.timestamp - b.timestamp);
-                }
-                renderMessages(msgs);
-                updateLastMessage(chat, msgs);
-                // Уведомление о новом сообщении
-                if (msgs.length > 0) {
-                    const last = msgs[msgs.length - 1];
-                    if (last.sender !== currentUser.username && !document.hasFocus()) {
-                        showToast(`Новое от ${last.sender}: ${last.text || '🖼️'}`);
-                        notify(last);
-                    }
-                }
-            };
-            db.ref(getChatPath(chat)).on('value', callback);
-            chatListeners[chat] = callback;
-        }
-
-        function stopListening(chat) {
-            if (chatListeners[chat]) {
-                db.ref(getChatPath(chat)).off('value', chatListeners[chat]);
-                delete chatListeners[chat];
-            }
-        }
-
-        async function sendMessage(text, imageUrl = null) {
-            if (!currentUser) return;
-            const msg = {
-                sender: currentUser.username,
-                text: text || '',
-                timestamp: firebase.database.ServerValue.TIMESTAMP,
-            };
-            if (imageUrl) msg.imageUrl = imageUrl;
-            await db.ref(getChatPath(currentChat)).push(msg);
-            messageInput.value = '';
-        }
-
-        async function deleteMessage(chat, msgId) {
-            await db.ref(`${getChatPath(chat)}/${msgId}`).remove();
-        }
-
-        function renderMessages(msgs) {
-            messagesArea.innerHTML = '';
-            if (!msgs.length) {
-                messagesArea.innerHTML = '<div style="color:var(--text2); text-align:center; margin-top:40px;">💬 Нет сообщений</div>';
+            // Проверка глобального бана
+            if (globalBansCache[currentUser.username]) {
+                showBannedScreen();
                 return;
             }
-            msgs.forEach(msg => {
-                const isSelf = msg.sender === currentUser.username;
-                const div = document.createElement('div');
-                div.className = 'msg ' + (isSelf ? 'self' : 'other');
-                let content = escapeHtml(msg.text || '');
-                if (msg.imageUrl) {
-                    content += `<br><img src="${msg.imageUrl}" alt="gif" onclick="window.open('${msg.imageUrl}')">`;
-                }
-                div.innerHTML = content + `<span class="time">${formatTime(msg.timestamp)}</span>`;
-                if (isSelf) {
-                    const delBtn = document.createElement('button');
-                    delBtn.className = 'del';
-                    delBtn.textContent = '🗑';
-                    delBtn.onclick = () => deleteMessage(currentChat, msg.id);
-                    div.appendChild(delBtn);
-                }
-                messagesArea.appendChild(div);
-            });
-            messagesArea.scrollTop = messagesArea.scrollHeight;
-        }
 
-        function updateLastMessage(chat, msgs) {
-            const last = msgs.length ? msgs[msgs.length - 1] : null;
-            const preview = last ? (last.text ? last.text : '🖼️ Стикер') : 'Нет сообщений';
-            const time = last ? formatTime(last.timestamp) : '';
-            if (chat === 'global') {
-                globalLastMsg.textContent = preview;
-                globalTime.textContent = time;
-            } else {
-                const item = chatList.querySelector(`.chat-item[data-chat="${chat}"]`);
-                if (item) {
-                    item.querySelector('.last-msg').textContent = preview;
-                    item.querySelector('.time').textContent = time;
-                }
+            $('loginScreen').style.display = 'none';
+            $('chatApp').style.display = 'flex';
+            initApp();
+        } catch (e) { $('loginError').textContent = e.message; }
+    }
+
+    function showBannedScreen() {
+        $('loginScreen').style.display = 'none';
+        $('chatApp').style.display = 'none';
+        $('bannedScreen').style.display = 'flex';
+    }
+
+    $('bannedLogoutBtn').onclick = () => {
+        db.ref(`presence/${currentUser?.username}`).remove();
+        localStorage.removeItem('dc_user');
+        localStorage.removeItem('dc_pass');
+        currentUser = null;
+        $('bannedScreen').style.display = 'none';
+        $('loginScreen').style.display = 'flex';
+    };
+
+    $('loginBtn').onclick = () => {
+        const u = $('loginInput').value.trim(), p = $('passInput').value.trim();
+        if (!u || !p) { $('loginError').textContent = 'Заполните поля'; return; }
+        doLogin(u, p, true);
+    };
+    $('toggleLogin').onclick = () => {
+        isLogin = !isLogin;
+        $('loginBtn').textContent = isLogin ? 'Войти' : 'Зарегистрироваться';
+        $('toggleLogin').textContent = isLogin ? 'Нет аккаунта? Зарегистрироваться' : 'Уже есть аккаунт? Войти';
+    };
+
+    // ========== ЗАГРУЗКА ДАННЫХ ==========
+    async function loadAllData() {
+        const [usersSnap, serversSnap, friendsSnap, bansSnap] = await Promise.all([
+            db.ref('users').once('value'),
+            db.ref('servers').once('value'),
+            db.ref('friends').once('value'),
+            db.ref('globalBans').once('value')
+        ]);
+        usersCache = usersSnap.val() || {};
+        serversCache = serversSnap.val() || {};
+        globalBansCache = bansSnap.val() || {};
+        const allFriends = friendsSnap.val() || {};
+        friendsCache = allFriends[currentUser.username] || {};
+
+        db.ref('presence').on('value', snap => {
+            presenceData = snap.val() || {};
+            if (currentServer === 'direct') renderChannelList();
+        });
+        setupPresence();
+        db.ref(`friends/${currentUser.username}`).on('value', snap => {
+            friendsCache = snap.val() || {};
+            if (currentServer === 'direct') renderChannelList();
+        });
+        db.ref('servers').on('value', snap => {
+            serversCache = snap.val() || {};
+            renderServerBar();
+            if (currentServer !== 'direct' && !serversCache[currentServer]) switchServer('direct');
+            renderChannelList();
+        });
+        db.ref('globalBans').on('value', snap => {
+            globalBansCache = snap.val() || {};
+            // Если текущий пользователь попал в бан во время сессии
+            if (currentUser && globalBansCache[currentUser.username]) {
+                showBannedScreen();
             }
-        }
+            if (currentServer === 'direct') renderChannelList();
+        });
+    }
 
-        // ============================================================
-        // СТИКЕРЫ
-        // ============================================================
-        async function loadStickers() {
-            const snap = await db.ref('catGifs').once('value');
+    function setupPresence() {
+        if (!currentUser) return;
+        db.ref(`presence/${currentUser.username}`).set({ lastSeen: firebase.database.ServerValue.TIMESTAMP });
+        db.ref(`presence/${currentUser.username}`).onDisconnect().remove();
+    }
+
+    // ========== ПРАВА ==========
+    function isServerOwner(serverId) {
+        return serversCache[serverId] && serversCache[serverId].owner === currentUser.username;
+    }
+    function isGlobalAdmin() {
+        return currentUser && currentUser.name === 'Даниил';
+    }
+    function canManageServer(serverId) {
+        return isServerOwner(serverId) || isGlobalAdmin();
+    }
+    function isAcceptedMember(serverId) {
+        if (!serversCache[serverId]) return false;
+        const members = serversCache[serverId].members || {};
+        return members[currentUser.username] === true;
+    }
+    function isBanned(serverId) {
+        if (!serversCache[serverId]) return false;
+        const banned = serversCache[serverId].banned || {};
+        return banned[currentUser.username] === true;
+    }
+
+    // ========== ПУТИ СООБЩЕНИЙ ==========
+    function getChatPath(server, channel) {
+        if (server === 'direct') {
+            if (channel === 'global') return 'messages/global';
+            const ids = [currentUser.username, channel].sort();
+            return `messages/private/${ids[0]}_${ids[1]}`;
+        }
+        return `messages/servers/${server}/${channel}`;
+    }
+
+    function listenToChat(server, channel) {
+        const path = getChatPath(server, channel);
+        if (path === activeChatPath && chatListener) return;
+        if (activeChatPath && chatListener) db.ref(activeChatPath).off('value', chatListener);
+        const cb = snap => {
+            const msgs = [];
             const data = snap.val();
-            stickerCache = data ? Object.values(data) : [];
-        }
+            if (data) for (let k in data) msgs.push({ id: k, ...data[k] });
+            msgs.sort((a, b) => a.timestamp - b.timestamp);
+            renderMessages(msgs);
+        };
+        db.ref(path).on('value', cb);
+        activeChatPath = path;
+        chatListener = cb;
+    }
 
-        async function addStickerUrl(url) {
-            if (!url.trim()) return;
-            try { new URL(url); } catch { alert('Некорректный URL'); return; }
-            await db.ref('catGifs').push(url);
-            await loadStickers();
-            renderStickers('saved');
-        }
-
-        // ============================================================
-        // GIPHY
-        // ============================================================
-        async function searchGiphy(query) {
-            if (!query.trim()) return [];
-            const url = `https://api.giphy.com/v1/gifs/search?api_key=${GIPHY_API_KEY}&q=${encodeURIComponent(query)}&limit=20&rating=g`;
-            const res = await fetch(url);
-            const data = await res.json();
-            return (data.data || []).map(item => item.images.original.url);
-        }
-
-        // ============================================================
-        // UI: список чатов
-        // ============================================================
-        function renderChatList() {
-            const globalItem = chatList.querySelector('#chatGlobal');
-            chatList.innerHTML = '';
-            chatList.appendChild(globalItem);
-
-            if (!currentUser) return;
-            const contactNames = new Set();
-            // Все пользователи из usersCache
-            for (let uname in usersCache) {
-                if (uname !== currentUser.username) contactNames.add(uname);
+    function renderMessages(msgs) {
+        const area = $('messagesArea');
+        area.innerHTML = '';
+        if (!msgs.length) { area.innerHTML = '<div style="color:var(--text-muted);text-align:center;margin-top:40px;">💬 Нет сообщений</div>'; return; }
+        const serverOwner = currentServer !== 'direct' ? serversCache[currentServer]?.owner : null;
+        const isGlobalChat = (currentServer === 'direct' && currentChannel === 'global');
+        msgs.forEach(msg => {
+            const div = document.createElement('div');
+            div.className = 'msg';
+            const sender = usersCache[msg.sender] || { name: msg.sender, avatar: '' };
+            const isCreator = sender.name === 'Даниил';
+            const isOwner = currentServer !== 'direct' && msg.sender === serverOwner;
+            let extraBtns = '';
+            if (msg.sender === currentUser.username) {
+                extraBtns += `<button class="del" data-id="${msg.id}">✕</button>`;
             }
-            // Добавляем тех, с кем уже есть переписка (могут быть не в usersCache)
-            // можно пропустить
+            // Глобальный бан (только в глобальном чате, только Даниил, не самого себя, не уже забаненного)
+            if (isGlobalChat && isGlobalAdmin() && msg.sender !== currentUser.username && !globalBansCache[msg.sender]) {
+                extraBtns += `<button class="ban-btn" data-ban="${msg.sender}" style="margin-left:4px; background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:12px;">⛔</button>`;
+            }
+            div.innerHTML = `
+                <div class="avatar-small">${sender.avatar ? `<img src="${sender.avatar}" onerror="this.style.display='none'; this.parentElement.textContent='${sender.name.charAt(0).toUpperCase()}'">` : sender.name.charAt(0).toUpperCase()}</div>
+                <div class="content">
+                    <span class="sender" style="color:${isOwner ? 'var(--owner-color)' : 'var(--interactive-active)'};">${sender.name || msg.sender}${isCreator ? '<span class="badge">⭐ Создатель</span>' : ''}${isOwner ? '<span class="owner-badge">[Владелец]</span>' : ''}</span>
+                    <span class="time">${new Date(msg.timestamp).toLocaleTimeString('ru-RU', {hour:'2-digit',minute:'2-digit'})}</span>
+                    <div class="text">${escapeHtml(msg.text||'')}</div>
+                    ${msg.imageUrl ? `<img src="${msg.imageUrl}" onclick="window.open('${msg.imageUrl}')">` : ''}
+                    ${msg.type === 'drawing' ? `<div class="drawing" style="color:${msg.color||'#fff'};background:${msg.bgColor||'#000'}">${escapeHtml(msg.content||'')}</div>` : ''}
+                </div>
+                ${extraBtns}
+            `;
+            // Удаление своего сообщения
+            const delBtn = div.querySelector('.del');
+            if (delBtn) delBtn.onclick = () => db.ref(`${activeChatPath}/${msg.id}`).remove();
+            // Глобальный бан
+            const banBtn = div.querySelector('.ban-btn');
+            if (banBtn) banBtn.onclick = () => banGlobalUser(msg.sender);
+            area.appendChild(div);
+        });
+        area.scrollTop = area.scrollHeight;
+    }
 
-            const sorted = Array.from(contactNames).sort();
-            sorted.forEach(uname => {
-                const user = usersCache[uname] || { name: uname, avatar: '' };
+    async function sendMessage(text, imageUrl = null, drawingData = null) {
+        if (!currentUser) return;
+        // Проверка глобального бана
+        if (currentServer === 'direct' && currentChannel === 'global' && globalBansCache[currentUser.username]) {
+            showToast('Вы забанены в глобальном чате');
+            return;
+        }
+        if (currentServer !== 'direct') {
+            if (!isAcceptedMember(currentServer)) { showToast('Вы не участник сервера'); return; }
+            if (isBanned(currentServer)) { showToast('Вы забанены на сервере'); return; }
+        }
+        const msg = {
+            sender: currentUser.username,
+            text: text || '',
+            timestamp: firebase.database.ServerValue.TIMESTAMP,
+        };
+        if (imageUrl) msg.imageUrl = imageUrl;
+        if (drawingData) {
+            msg.type = 'drawing';
+            msg.content = drawingData.content;
+            msg.color = drawingData.color;
+            msg.bgColor = drawingData.bgColor;
+        }
+        await db.ref(activeChatPath).push(msg);
+        $('messageInput').value = '';
+    }
+
+    // ========== ГЛОБАЛЬНЫЕ БАНЫ (только Даниил) ==========
+    async function banGlobalUser(username) {
+        if (!isGlobalAdmin()) return;
+        if (!username.trim()) return;
+        await db.ref(`globalBans/${username}`).set(true);
+        showToast(`${username} забанен в глобальном чате`);
+        refreshGlobalBansList();
+    }
+    async function unbanGlobalUser(username) {
+        if (!isGlobalAdmin()) return;
+        await db.ref(`globalBans/${username}`).remove();
+        showToast(`${username} разбанен`);
+        refreshGlobalBansList();
+    }
+
+    function refreshGlobalBansList() {
+        const listDiv = $('globalBansList');
+        if (!listDiv) return;
+        listDiv.innerHTML = '';
+        const banned = Object.keys(globalBansCache);
+        if (banned.length === 0) {
+            listDiv.innerHTML = 'Нет забаненных';
+        } else {
+            banned.forEach(username => {
                 const div = document.createElement('div');
-                div.className = 'chat-item' + (currentChat === uname ? ' active' : '');
-                div.dataset.chat = uname;
-                const av = document.createElement('div');
-                av.className = 'avatar';
-                if (user.avatar) {
-                    av.innerHTML = `<img src="${user.avatar}" onerror="this.style.display='none'; this.parentElement.textContent='${(user.name||'?').charAt(0).toUpperCase()}'">`;
-                } else {
-                    av.textContent = (user.name || uname).charAt(0).toUpperCase();
-                }
-                const info = document.createElement('div');
-                info.className = 'info';
-                info.innerHTML = `<div class="name">${user.name||uname}</div><div class="last-msg">Загрузка...</div>`;
-                const timeDiv = document.createElement('div');
-                timeDiv.className = 'time';
-                div.appendChild(av);
-                div.appendChild(info);
-                div.appendChild(timeDiv);
-                div.addEventListener('click', () => switchChat(uname));
-                chatList.appendChild(div);
-                // Подгружаем последнее сообщение один раз
-                loadLastMessage(uname, info.querySelector('.last-msg'), timeDiv);
-            });
-
-            // Обновляем глобальный чат
-            const gMsgs = db.ref('messages/global').once('value').then(snap => {
-                const msgs = [];
-                const data = snap.val();
-                if (data) for (let k in data) msgs.push(data[k]);
-                msgs.sort((a,b)=>a.timestamp-b.timestamp);
-                updateLastMessage('global', msgs);
+                div.style.display = 'flex';
+                div.style.justifyContent = 'space-between';
+                div.style.marginBottom = '6px';
+                div.innerHTML = `<span>${username}</span><button class="btn green" style="padding:2px 8px; width:auto;" data-unban="${username}">Разбанить</button>`;
+                listDiv.appendChild(div);
+                div.querySelector('[data-unban]').onclick = () => unbanGlobalUser(username);
             });
         }
+    }
 
-        async function loadLastMessage(chatName, lastMsgEl, timeEl) {
-            const path = `messages/private/${[currentUser.username, chatName].sort().join('_')}`;
-            const snap = await db.ref(path).limitToLast(1).once('value');
-            const data = snap.val();
-            if (data) {
-                const msg = Object.values(data)[0];
-                lastMsgEl.textContent = msg.text || '🖼️ Стикер';
-                timeEl.textContent = formatTime(msg.timestamp);
+    // ========== ДРУЗЬЯ ==========
+    async function sendFriendRequest(toUsername) {
+        if (toUsername === currentUser.username) { showToast('Нельзя добавить самого себя'); return; }
+        const snap = await db.ref(`users/${toUsername}`).once('value');
+        if (!snap.exists()) { showToast('Пользователь не найден'); return; }
+        if (friendsCache[toUsername] === 'accepted') { showToast('Вы уже друзья'); return; }
+        await db.ref(`friends/${currentUser.username}/${toUsername}`).set('pending');
+        await db.ref(`friends/${toUsername}/${currentUser.username}`).set('incoming');
+        showToast('Заявка отправлена');
+    }
+
+    async function acceptFriendRequest(fromUsername) {
+        await db.ref(`friends/${currentUser.username}/${fromUsername}`).set('accepted');
+        await db.ref(`friends/${fromUsername}/${currentUser.username}`).set('accepted');
+        showToast(`Вы приняли заявку от ${fromUsername}`);
+    }
+
+    async function declineFriendRequest(fromUsername) {
+        await db.ref(`friends/${currentUser.username}/${fromUsername}`).remove();
+        await db.ref(`friends/${fromUsername}/${currentUser.username}`).remove();
+        showToast('Заявка отклонена');
+    }
+
+    // ========== СЕРВЕРЫ ==========
+    async function createServer(name) {
+        const ref = db.ref('servers').push();
+        const data = {
+            name,
+            owner: currentUser.username,
+            icon: '',
+            channels: { general: { name: 'общий' } },
+            members: { [currentUser.username]: true },
+            requests: {},
+            banned: {}
+        };
+        await ref.set(data);
+        serversCache[ref.key] = data;
+        switchServer(ref.key);
+        $('serverModal').classList.remove('open');
+        $('serverNameInput').value = '';
+    }
+
+    async function sendServerRequest(serverId) {
+        if (!serversCache[serverId]) return;
+        const members = serversCache[serverId].members || {};
+        if (members[currentUser.username]) { showToast('Вы уже участник'); return; }
+        const requests = serversCache[serverId].requests || {};
+        if (requests[currentUser.username]) { showToast('Заявка уже подана'); return; }
+        await db.ref(`servers/${serverId}/requests/${currentUser.username}`).set('pending');
+        showToast('Заявка на сервер отправлена');
+    }
+
+    async function acceptServerRequest(serverId, username) {
+        await db.ref(`servers/${serverId}/members/${username}`).set(true);
+        await db.ref(`servers/${serverId}/requests/${username}`).remove();
+        showToast(`Пользователь ${username} принят`);
+    }
+
+    async function declineServerRequest(serverId, username) {
+        await db.ref(`servers/${serverId}/requests/${username}`).remove();
+        showToast(`Заявка от ${username} отклонена`);
+    }
+
+    // Бан на сервере – только владелец сервера
+    async function banUser(serverId, username) {
+        if (!isServerOwner(serverId)) { showToast('Только владелец сервера может банить'); return; }
+        if (serversCache[serverId].owner === username) { showToast('Нельзя забанить владельца'); return; }
+        await db.ref(`servers/${serverId}/banned/${username}`).set(true);
+        await db.ref(`servers/${serverId}/members/${username}`).remove();
+        showToast(`${username} забанен`);
+    }
+
+    async function unbanUser(serverId, username) {
+        if (!isServerOwner(serverId)) { showToast('Только владелец сервера может разбанивать'); return; }
+        await db.ref(`servers/${serverId}/banned/${username}`).remove();
+        showToast(`${username} разбанен`);
+    }
+
+    async function setServerIcon(serverId, url) {
+        if (!canManageServer(serverId)) return;
+        await db.ref(`servers/${serverId}/icon`).set(url);
+        showToast('Иконка обновлена');
+    }
+
+    // ========== UI ==========
+    function renderServerBar() {
+        const bar = $('serverBar');
+        bar.innerHTML = '';
+        const directIcon = document.createElement('div');
+        directIcon.className = 'server-icon' + (currentServer === 'direct' ? ' active' : '');
+        directIcon.dataset.server = 'direct';
+        directIcon.textContent = '💬';
+        directIcon.title = 'Личные сообщения';
+        directIcon.onclick = () => switchServer('direct');
+        bar.appendChild(directIcon);
+        const sep = document.createElement('div');
+        sep.className = 'separator';
+        bar.appendChild(sep);
+
+        for (let id in serversCache) {
+            const s = serversCache[id];
+            const icon = document.createElement('div');
+            icon.className = 'server-icon' + (currentServer === id ? ' active' : '');
+            icon.dataset.server = id;
+            if (s.icon) {
+                icon.innerHTML = `<img src="${s.icon}" onerror="this.style.display='none'; this.parentElement.textContent='${s.name.charAt(0).toUpperCase()}'">`;
             } else {
-                lastMsgEl.textContent = 'Нет сообщений';
-                timeEl.textContent = '';
+                icon.textContent = s.name.charAt(0).toUpperCase();
             }
+            icon.title = s.name;
+            icon.onclick = () => switchServer(id);
+            bar.appendChild(icon);
         }
+        const addBtn = document.createElement('div');
+        addBtn.className = 'server-icon';
+        addBtn.innerHTML = '➕';
+        addBtn.title = 'Добавить сервер';
+        addBtn.onclick = () => $('serverModal').classList.add('open');
+        bar.appendChild(addBtn);
+    }
 
-        function switchChat(chat) {
-            if (currentChat === chat) return;
-            stopListening(currentChat);
-            currentChat = chat;
-            listenToChat(chat);
-            updatePanelHeader(chat);
-            renderChatList();
-            closeSidebar();
-            localStorage.setItem('chat_current', chat);
-        }
+    function renderChannelList() {
+        const list = $('channelList');
+        list.innerHTML = '';
+        $('serverNameHeader').textContent = currentServer === 'direct' ? 'Личные сообщения' : (serversCache[currentServer]?.name || 'Сервер');
 
-        function updatePanelHeader(chat) {
-            if (chat === 'global') {
-                panelName.textContent = 'Глобальный чат';
-                panelAvatar.innerHTML = '🌍';
-                panelStatus.textContent = 'онлайн';
-                panelStatus.style.color = '#4caf84';
-            } else {
-                const user = usersCache[chat] || { name: chat, avatar: '' };
-                panelName.textContent = user.name || chat;
-                const online = isUserOnline(chat);
-                panelStatus.textContent = online ? 'онлайн' : 'офлайн';
-                panelStatus.style.color = online ? '#4caf84' : 'var(--text2)';
-                if (user.avatar) {
-                    panelAvatar.innerHTML = `<img src="${user.avatar}" onerror="this.parentElement.textContent='${(user.name||'?').charAt(0).toUpperCase()}'">`;
-                } else {
-                    panelAvatar.textContent = (user.name || chat).charAt(0).toUpperCase();
-                }
-            }
-        }
+        // Кнопка глобальных банов только для Даниила в direct
+        $('globalBansBtn').style.display = (isGlobalAdmin() && currentServer === 'direct') ? 'inline-block' : 'none';
 
-        // ============================================================
-        // САЙДБАР (мобильный)
-        // ============================================================
-        function openSidebar() { sidebar.classList.add('open'); chatPanel.classList.add('shifted'); }
-        function closeSidebar() { sidebar.classList.remove('open'); chatPanel.classList.remove('shifted'); }
-        function toggleSidebar() { sidebar.classList.contains('open') ? closeSidebar() : openSidebar(); }
+        if (currentServer !== 'direct') {
+            const canManage = canManageServer(currentServer);
+            $('serverIconBtn').style.display = canManage ? 'inline-block' : 'none';
+            // Кнопка управления участниками только для владельца сервера
+            $('memberManageBtn').style.display = isServerOwner(currentServer) ? 'inline-block' : 'none';
 
-        // ============================================================
-        // УВЕДОМЛЕНИЯ
-        // ============================================================
-        function showToast(text) {
-            toast.textContent = text;
-            toast.classList.add('show');
-            clearTimeout(toast._timer);
-            toast._timer = setTimeout(() => toast.classList.remove('show'), 4000);
-        }
-        function notify(msg) {
-            if (Notification.permission === 'default') Notification.requestPermission();
-            if (Notification.permission === 'granted') {
-                new Notification(`Новое сообщение от ${msg.sender}`, {
-                    body: msg.text || '🖼️ Стикер',
-                    icon: 'https://cdn-icons-png.flaticon.com/512/1044/1044342.png'
-                });
-            }
-        }
-
-        // ============================================================
-        // РАЗМЕР ЭКРАНА
-        // ============================================================
-        function updateScreenSize() {
-            const w = window.innerWidth, h = window.innerHeight;
-            screenSizeDisplay.textContent = `📐 ${w}×${h}`;
-            if (settingsScreenWidth) settingsScreenWidth.textContent = w;
-            if (settingsScreenHeight) settingsScreenHeight.textContent = h;
-        }
-        screenSizeDisplay.addEventListener('click', () => {
-            const size = `${window.innerWidth}×${window.innerHeight}`;
-            navigator.clipboard?.writeText(size).then(() => showToast('Скопировано: ' + size)).catch(() => showToast('Не удалось скопировать'));
-        });
-
-        // ============================================================
-        // ТЕМА
-        // ============================================================
-        function applyTheme(theme) {
-            document.documentElement.setAttribute('data-theme', theme);
-            localStorage.setItem('chat_theme', theme);
-            themeDark.classList.toggle('active', theme === 'dark');
-            themeLight.classList.toggle('active', theme === 'light');
-        }
-
-        // ============================================================
-        // ВСПОМОГАТЕЛЬНЫЕ
-        // ============================================================
-        function escapeHtml(text) {
-            const d = document.createElement('div');
-            d.textContent = text;
-            return d.innerHTML;
-        }
-        function formatTime(ts) {
-            if (!ts) return '';
-            const d = new Date(ts);
-            return d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
-        }
-
-        // ============================================================
-        // ИНИЦИАЛИЗАЦИЯ
-        // ============================================================
-        async function loadUsersCache() {
-            const snap = await db.ref('users').once('value');
-            usersCache = snap.val() || {};
-        }
-
-        async function initApp() {
-            await loadUsersCache();
-            await loadStickers();
-            setupPresence();
-            listenPresence();
-
-            // Слушаем глобальный чат по умолчанию
-            currentChat = localStorage.getItem('chat_current') || 'global';
-            if (currentChat !== 'global' && !usersCache[currentChat]) {
-                currentChat = 'global';
-            }
-            listenToChat(currentChat);
-            updatePanelHeader(currentChat);
-            renderChatList();
-
-            // Обработчики
-            sendBtn.addEventListener('click', () => sendMessage(messageInput.value));
-            messageInput.addEventListener('keydown', e => { if (e.key === 'Enter') sendMessage(messageInput.value); });
-            stickerBtn.addEventListener('click', openStickerModal);
-            closeStickerModal.addEventListener('click', () => stickerModal.classList.remove('open'));
-            stickerModal.addEventListener('click', e => { if (e.target === stickerModal) stickerModal.classList.remove('open'); });
-
-            menuBtn.addEventListener('click', toggleSidebar);
-            chatGlobal.addEventListener('click', () => switchChat('global'));
-
-            document.addEventListener('click', e => {
-                if (window.innerWidth <= 700 && sidebar.classList.contains('open') && !sidebar.contains(e.target) && e.target !== menuBtn) {
-                    closeSidebar();
-                }
-            });
-
-            addContactBtn.addEventListener('click', () => addContactModal.classList.add('open'));
-            closeModal.addEventListener('click', () => addContactModal.classList.remove('open'));
-            confirmAddContact.addEventListener('click', addContact);
-            contactInput.addEventListener('keydown', e => { if (e.key === 'Enter') addContact(); });
-
-            settingsBtn.addEventListener('click', () => {
-                settingsPanel.classList.add('open');
-                avatarUrlInput.value = currentUser.avatar || '';
-                updateScreenSize();
-            });
-            settingsBack.addEventListener('click', () => settingsPanel.classList.remove('open'));
-            avatarUrlInput.addEventListener('change', async () => {
-                await updateProfile({ avatar: avatarUrlInput.value.trim() });
-                usersCache[currentUser.username].avatar = avatarUrlInput.value.trim();
-                renderChatList();
-                updatePanelHeader(currentChat);
-            });
-            themeDark.addEventListener('click', () => applyTheme('dark'));
-            themeLight.addEventListener('click', () => applyTheme('light'));
-            settingsLogout.addEventListener('click', logout);
-
-            updateScreenSize();
-            window.addEventListener('resize', updateScreenSize);
-        }
-
-        async function addContact() {
-            const username = contactInput.value.trim();
-            if (!username) return;
-            if (username === currentUser.username) { alert('Это вы'); return; }
-            const snap = await db.ref(`users/${username}`).once('value');
-            if (!snap.exists()) { alert('Пользователь не найден'); return; }
-            usersCache[username] = snap.val();
-            addContactModal.classList.remove('open');
-            switchChat(username);
-            renderChatList();
-        }
-
-        function openStickerModal() {
-            stickerModal.classList.add('open');
-            stickerSearchInput.value = '';
-            document.querySelector('.sticker-tabs button[data-tab="saved"]').classList.add('active');
-            document.querySelector('.sticker-tabs button[data-tab="search"]').classList.remove('active');
-            renderStickers('saved');
-        }
-
-        let currentStickerTab = 'saved';
-        function renderStickers(tab) {
-            currentStickerTab = tab;
-            stickerGrid.innerHTML = '';
-            if (tab === 'saved') {
-                stickerCache.forEach(url => {
-                    const img = document.createElement('img');
-                    img.src = url;
-                    img.onerror = () => img.style.display = 'none';
-                    img.addEventListener('click', () => {
-                        sendMessage('', url);
-                        stickerModal.classList.remove('open');
+            const server = serversCache[currentServer];
+            if (canManage) {
+                const requests = server.requests || {};
+                const pending = Object.keys(requests).filter(u => requests[u] === 'pending');
+                if (pending.length > 0) {
+                    list.innerHTML = '<div class="channel-category">ЗАЯВКИ (' + pending.length + ')</div>';
+                    pending.forEach(username => {
+                        const div = document.createElement('div');
+                        div.className = 'server-request-item';
+                        div.style.margin = '2px 8px';
+                        div.innerHTML = `<span>${username}</span>
+                            <div>
+                                <button class="btn green" style="padding:2px 8px;" data-accept="${username}">✔</button>
+                                <button class="btn red" style="padding:2px 8px;" data-decline="${username}">✖</button>
+                            </div>`;
+                        list.appendChild(div);
+                        div.querySelector('[data-accept]').onclick = () => acceptServerRequest(currentServer, username);
+                        div.querySelector('[data-decline]').onclick = () => declineServerRequest(currentServer, username);
                     });
-                    stickerGrid.appendChild(img);
-                });
-                const addDiv = document.createElement('div');
-                addDiv.style.cssText = 'display:flex;flex-direction:column;align-items:center;justify-content:center;border:2px dashed var(--border);border-radius:8px;padding:6px;cursor:pointer;';
-                addDiv.innerHTML = '<span style="font-size:20px;">➕</span><span style="font-size:11px;color:var(--text2);">Добавить</span>';
-                addDiv.addEventListener('click', () => {
-                    const url = prompt('Введите URL картинки/гифки:');
-                    if (url) addStickerUrl(url);
-                });
-                stickerGrid.appendChild(addDiv);
+                }
+            }
+            list.innerHTML += '<div class="channel-category">ТЕКСТОВЫЕ КАНАЛЫ' + (canManage ? ' <span id="addChannelBtn" style="cursor:pointer;">+</span>' : '') + '</div>';
+            for (let chId in serversCache[currentServer].channels) {
+                const ch = serversCache[currentServer].channels[chId];
+                const div = document.createElement('div');
+                div.className = 'channel-item' + (currentChannel === chId ? ' active' : '');
+                div.innerHTML = `<span>#</span> ${ch.name}`;
+                div.onclick = () => switchChannel(currentServer, chId);
+                list.appendChild(div);
+            }
+            if (canManage) $('addChannelBtn').onclick = () => $('channelModal').classList.add('open');
+        } else {
+            $('serverIconBtn').style.display = 'none';
+            $('memberManageBtn').style.display = 'none';
+            list.innerHTML = '<div class="channel-category">ОБЩИЙ ЧАТ</div>';
+            const globalDiv = document.createElement('div');
+            globalDiv.className = 'channel-item' + (currentChannel === 'global' ? ' active' : '');
+            globalDiv.innerHTML = '<span>🌍</span> Глобальный чат';
+            globalDiv.onclick = () => switchChannel('direct', 'global');
+            list.appendChild(globalDiv);
+
+            list.innerHTML += '<div class="channel-category">ДРУЗЬЯ</div>';
+            const friends = Object.entries(friendsCache).filter(([n, s]) => s === 'accepted');
+            if (friends.length === 0) {
+                list.innerHTML += '<div style="padding:8px 16px; color:var(--text-muted);">Пока нет друзей</div>';
             } else {
-                const query = stickerSearchInput.value.trim() || 'funny cat';
-                searchGiphy(query).then(results => {
-                    if (!results.length) {
-                        stickerGrid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:var(--text2);padding:20px;">Ничего не найдено</div>';
-                        return;
-                    }
-                    results.forEach(url => {
-                        const wrapper = document.createElement('div');
-                        wrapper.style.position = 'relative';
-                        const img = document.createElement('img');
-                        img.src = url;
-                        img.onerror = () => img.style.display = 'none';
-                        img.addEventListener('click', () => {
-                            sendMessage('', url);
-                            stickerModal.classList.remove('open');
-                        });
-                        const saveBtn = document.createElement('button');
-                        saveBtn.textContent = '💾';
-                        saveBtn.style.cssText = 'position:absolute;bottom:4px;right:4px;background:rgba(0,0,0,0.6);border:none;border-radius:50%;color:#fff;width:26px;height:26px;cursor:pointer;font-size:13px;';
-                        saveBtn.addEventListener('click', e => {
-                            e.stopPropagation();
-                            addStickerUrl(url);
-                        });
-                        wrapper.appendChild(img);
-                        wrapper.appendChild(saveBtn);
-                        stickerGrid.appendChild(wrapper);
-                    });
+                friends.forEach(([friendName]) => {
+                    const user = usersCache[friendName] || { name: friendName, avatar: '' };
+                    const isCreator = user.name === 'Даниил';
+                    const isBannedGlobally = globalBansCache[friendName];
+                    const div = document.createElement('div');
+                    div.className = 'channel-item' + (currentChannel === friendName ? ' active' : '');
+                    const online = presenceData[friendName];
+                    let badge = '';
+                    if (isBannedGlobally) badge = '<span class="banned-badge">🚫 Banned</span>';
+                    else if (isCreator) badge = '<span class="badge">⭐ Создатель</span>';
+                    div.innerHTML = `<span style="color:${online?'var(--green)':'var(--text-muted)'}">●</span> ${user.name || friendName}${badge}`;
+                    div.onclick = () => {
+                        if (globalBansCache[friendName]) {
+                            showToast('Этот пользователь забанен');
+                            return;
+                        }
+                        switchChannel('direct', friendName);
+                    };
+                    list.appendChild(div);
                 });
             }
         }
-        stickerTabs.forEach(btn => {
-            btn.addEventListener('click', () => {
-                stickerTabs.forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                renderStickers(btn.dataset.tab);
+    }
+
+    function switchServer(serverId) {
+        if (serverId === 'direct') {
+            currentServer = 'direct';
+            currentChannel = 'global';
+        } else {
+            currentServer = serverId;
+            const channels = serversCache[serverId]?.channels || {};
+            currentChannel = Object.keys(channels)[0] || 'general';
+        }
+        saveState();
+        updateUI();
+    }
+
+    function switchChannel(server, channel) {
+        if (server === 'direct' && channel !== 'global') {
+            if (globalBansCache[channel]) {
+                showToast('Этот пользователь забанен');
+                return;
+            }
+            if (friendsCache[channel] !== 'accepted') {
+                showToast('Вы не друзья');
+                return;
+            }
+        }
+        currentServer = server;
+        currentChannel = channel;
+        saveState();
+        updateUI();
+    }
+
+    function saveState() {
+        localStorage.setItem('dc_server', currentServer);
+        localStorage.setItem('dc_channel', currentChannel);
+    }
+
+    function updateUI() {
+        renderServerBar();
+        renderChannelList();
+        if (currentServer === 'direct') {
+            $('chatChannelName').textContent = currentChannel === 'global' ? 'Глобальный чат' : (usersCache[currentChannel]?.name || currentChannel);
+            $('chatTopic').textContent = '';
+        } else {
+            const ch = serversCache[currentServer]?.channels[currentChannel];
+            $('chatChannelName').textContent = ch?.name || currentChannel;
+            $('chatTopic').textContent = '';
+        }
+        if (currentUser) {
+            $('userPanelAvatar').innerHTML = currentUser.avatar ? `<img src="${currentUser.avatar}" onerror="this.style.display='none'; this.parentElement.textContent='${currentUser.name.charAt(0).toUpperCase()}'">` : currentUser.name.charAt(0).toUpperCase();
+            $('userPanelName').textContent = currentUser.name;
+        }
+        listenToChat(currentServer, currentChannel);
+        if (window.innerWidth <= 768) $('channelBar').classList.remove('open');
+    }
+
+    // ========== ОБРАБОТЧИКИ ==========
+    $('sendBtn').onclick = () => sendMessage($('messageInput').value);
+    $('messageInput').onkeydown = e => { if (e.key === 'Enter') sendMessage($('messageInput').value); };
+    $('gifBtn').onclick = () => $('gifModal').classList.add('open');
+    $('gifSearchInput').oninput = async () => {
+        const q = $('gifSearchInput').value.trim();
+        if (!q) return;
+        const res = await fetch(`https://api.giphy.com/v1/gifs/search?api_key=${GIPHY_KEY}&q=${encodeURIComponent(q)}&limit=20`);
+        const data = await res.json();
+        const grid = $('gifGrid');
+        grid.innerHTML = '';
+        (data.data||[]).forEach(g => {
+            const img = document.createElement('img');
+            img.src = g.images.fixed_height_small.url;
+            img.style.cssText = 'width:100%;cursor:pointer;border-radius:6px;';
+            img.onclick = () => { sendMessage('', g.images.original.url); $('gifModal').classList.remove('open'); };
+            grid.appendChild(img);
+        });
+    };
+    $('drawBtn').onclick = () => $('drawModal').classList.add('open');
+    $('sendDrawBtn').onclick = () => {
+        const content = $('drawTextInput').value;
+        const color = $('drawColorInput').value;
+        const bgColor = $('drawBgInput').value;
+        if (!content.trim()) return;
+        sendMessage('', null, { content, color, bgColor });
+        $('drawModal').classList.remove('open');
+        $('drawTextInput').value = '';
+    };
+    $('settingsBtn').onclick = () => {
+        $('avatarUrlInput').value = currentUser.avatar || '';
+        $('settingsModal').classList.add('open');
+    };
+    $('saveAvatarBtn').onclick = async () => {
+        const url = $('avatarUrlInput').value.trim();
+        await db.ref(`users/${currentUser.username}/avatar`).set(url);
+        currentUser.avatar = url;
+        usersCache[currentUser.username].avatar = url;
+        updateUI();
+        $('settingsModal').classList.remove('open');
+    };
+    $('logoutBtn').onclick = () => {
+        db.ref(`presence/${currentUser.username}`).remove();
+        localStorage.clear();
+        currentUser = null;
+        $('chatApp').style.display = 'none';
+        $('loginScreen').style.display = 'flex';
+        $('settingsModal').classList.remove('open');
+    };
+    $('createServerBtn').onclick = () => createServer($('serverNameInput').value.trim());
+    $('createChannelBtn').onclick = () => createChannel($('channelNameInput').value.trim());
+    async function createChannel(name) {
+        if (currentServer === 'direct') return;
+        if (!isAcceptedMember(currentServer) && !canManageServer(currentServer)) { showToast('Нет прав'); return; }
+        const key = name.replace(/\s/g, '_').toLowerCase();
+        await db.ref(`servers/${currentServer}/channels/${key}`).set({ name });
+        serversCache[currentServer].channels[key] = { name };
+        renderChannelList();
+        $('channelModal').classList.remove('open');
+        $('channelNameInput').value = '';
+    }
+
+    // Поиск людей
+    $('findPeopleBtn').onclick = () => $('findPeopleModal').classList.add('open');
+    $('searchUserBtn').onclick = async () => {
+        const query = $('findPeopleInput').value.trim();
+        if (!query) return;
+        const snap = await db.ref(`users/${query}`).once('value');
+        const resDiv = $('searchResult');
+        if (snap.exists()) {
+            const user = snap.val();
+            const isMe = query === currentUser.username;
+            const isFriend = friendsCache[query] === 'accepted';
+            const isPending = friendsCache[query] === 'pending' || friendsCache[query] === 'incoming';
+            let html = `<div>Найден: ${user.name || query}</div>`;
+            if (!isMe && !isFriend && !isPending) html += `<button class="btn" id="addFriendBtn">Добавить в друзья</button>`;
+            else if (isMe) html += '<div>Это вы</div>';
+            else if (isFriend) html += '<div>Вы друзья</div>';
+            else html += '<div>Заявка уже отправлена</div>';
+            resDiv.innerHTML = html;
+            const btn = $('addFriendBtn');
+            if (btn) btn.onclick = () => sendFriendRequest(query);
+        } else resDiv.innerHTML = '<div>Не найден</div>';
+    };
+
+    // Заявки друзей
+    $('requestsBtn').onclick = () => {
+        const incoming = Object.entries(friendsCache).filter(([n,s]) => s === 'incoming');
+        const list = $('friendRequestsList');
+        list.innerHTML = '';
+        if (incoming.length === 0) list.innerHTML = 'Нет заявок';
+        else {
+            incoming.forEach(([uname]) => {
+                const div = document.createElement('div');
+                div.className = 'friends-request-item';
+                div.innerHTML = `<span>${uname}</span>
+                    <div>
+                        <button class="btn green" style="padding:2px 8px;" data-accept="${uname}">✔</button>
+                        <button class="btn red" style="padding:2px 8px;" data-decline="${uname}">✖</button>
+                    </div>`;
+                list.appendChild(div);
+                div.querySelector('[data-accept]').onclick = () => acceptFriendRequest(uname);
+                div.querySelector('[data-decline]').onclick = () => declineFriendRequest(uname);
             });
-        });
-        stickerSearchInput.addEventListener('input', () => {
-            if (currentStickerTab === 'search') renderStickers('search');
-        });
-
-        async function logout() {
-            if (currentUser) {
-                db.ref(`presence/${currentUser.username}`).remove();
-                await db.ref(`users/${currentUser.username}`).update({ status: 'offline', lastSeen: Date.now() });
-            }
-            localStorage.removeItem('chat_user');
-            localStorage.removeItem('chat_pass');
-            currentUser = null;
-            chatApp.style.display = 'none';
-            loginScreen.style.display = 'flex';
-            settingsPanel.classList.remove('open');
-            // Отписываемся от всех слушателей
-            Object.keys(chatListeners).forEach(chat => stopListening(chat));
         }
+        $('friendRequestsModal').classList.add('open');
+    };
 
-        // ============================================================
-        // АВТОРИЗАЦИЯ
-        // ============================================================
-        async function doLogin(username, password, remember) {
-            try {
-                if (isLogin) {
-                    currentUser = await loginUser(username, password);
-                } else {
-                    currentUser = await registerUser(username, password);
-                }
-                loginScreen.style.display = 'none';
-                chatApp.style.display = 'flex';
-                if (remember) {
-                    localStorage.setItem('chat_user', username);
-                    localStorage.setItem('chat_pass', password);
-                } else {
-                    localStorage.removeItem('chat_user');
-                    localStorage.removeItem('chat_pass');
-                }
-                await initApp();
-            } catch (err) {
-                loginError.textContent = err.message;
+    // Поиск серверов
+    $('findServerBtn').onclick = () => $('findServerModal').classList.add('open');
+    $('searchServerBtn').onclick = () => {
+        const query = $('findServerInput').value.trim().toLowerCase();
+        const resDiv = $('serverSearchResult');
+        if (!query) return;
+        let found = null;
+        for (let id in serversCache) {
+            if (serversCache[id].name.toLowerCase().includes(query)) {
+                found = { id, ...serversCache[id] };
+                break;
             }
         }
+        if (found) {
+            const isMember = (found.members || {})[currentUser.username];
+            const isBanned = (found.banned || {})[currentUser.username];
+            const isPending = (found.requests || {})[currentUser.username] === 'pending';
+            let html = `<div>Сервер: ${found.name}</div>`;
+            if (isBanned) html += '<div style="color:red;">Вы забанены</div>';
+            else if (isMember) html += '<div>Вы участник</div>';
+            else if (isPending) html += '<div>Заявка рассматривается</div>';
+            else html += `<button class="btn" id="joinServerBtn">Подать заявку</button>`;
+            resDiv.innerHTML = html;
+            const btn = $('joinServerBtn');
+            if (btn) btn.onclick = () => sendServerRequest(found.id);
+        } else resDiv.innerHTML = '<div>Сервер не найден</div>';
+    };
 
-        loginBtn.addEventListener('click', () => {
-            const u = loginInput.value.trim(), p = passInput.value.trim();
-            if (!u || !p) { loginError.textContent = 'Заполните все поля'; return; }
-            loginError.textContent = '';
-            doLogin(u, p, rememberCheck.checked);
-        });
-        toggleLogin.addEventListener('click', () => {
-            isLogin = !isLogin;
-            loginBtn.textContent = isLogin ? 'Войти' : 'Зарегистрироваться';
-            toggleLogin.textContent = isLogin ? 'Нет аккаунта? Зарегистрироваться' : 'Уже есть аккаунт? Войти';
-            loginError.textContent = '';
-        });
+    // Иконка сервера
+    $('serverIconBtn').onclick = () => {
+        if (!canManageServer(currentServer)) return;
+        $('serverIconInput').value = serversCache[currentServer]?.icon || '';
+        $('serverIconModal').classList.add('open');
+    };
+    $('saveServerIconBtn').onclick = () => {
+        setServerIcon(currentServer, $('serverIconInput').value.trim());
+        $('serverIconModal').classList.remove('open');
+    };
 
-        // Автовход
-        (async function() {
-            const savedTheme = localStorage.getItem('chat_theme') || 'dark';
-            applyTheme(savedTheme);
-            const savedUser = localStorage.getItem('chat_user');
-            const savedPass = localStorage.getItem('chat_pass');
-            if (savedUser && savedPass) {
-                loginInput.value = savedUser;
-                passInput.value = savedPass;
-                rememberCheck.checked = true;
-                try {
-                    await doLogin(savedUser, savedPass, true);
-                } catch {
-                    loginScreen.style.display = 'flex';
-                }
-            } else {
-                loginScreen.style.display = 'flex';
+    // Управление участниками (владелец сервера)
+    $('memberManageBtn').onclick = () => {
+        if (!isServerOwner(currentServer)) return;
+        const server = serversCache[currentServer];
+        const members = server.members || {};
+        const banned = server.banned || {};
+        const memberListDiv = $('memberList');
+        memberListDiv.innerHTML = '<h4>Участники</h4>';
+        for (let uname in members) {
+            const isOwner = server.owner === uname;
+            memberListDiv.innerHTML += `<div>${uname} ${isOwner ? '<span style="color:var(--owner-color);">[Владелец]</span>' : ''}</div>`;
+        }
+        const bannedListDiv = $('bannedList');
+        bannedListDiv.innerHTML = '';
+        for (let uname in banned) {
+            bannedListDiv.innerHTML += `<div>${uname} <button class="btn green" style="padding:2px 6px;" data-unban="${uname}">Разбанить</button></div>`;
+        }
+        $('memberManageModal').classList.add('open');
+        bannedListDiv.querySelectorAll('[data-unban]').forEach(btn => {
+            btn.onclick = () => unbanUser(currentServer, btn.dataset.unban);
+        });
+    };
+    $('banBtn').onclick = () => {
+        const target = $('banInput').value.trim();
+        if (!target) return;
+        banUser(currentServer, target);
+        $('banInput').value = '';
+    };
+
+    // Глобальные баны (Даниил) – открытие модалки
+    $('globalBansBtn').onclick = () => {
+        refreshGlobalBansList();
+        $('globalBansModal').classList.add('open');
+    };
+    // Ручной бан
+    $('globalBanBtn').onclick = () => {
+        const target = $('globalBanInput').value.trim();
+        if (target) banGlobalUser(target);
+        $('globalBanInput').value = '';
+    };
+
+    document.querySelectorAll('.close-modal').forEach(btn => btn.onclick = () => btn.closest('.modal-overlay').classList.remove('open'));
+    $('channelBarHeader').onclick = (e) => {
+        if (e.target.tagName === 'BUTTON') return;
+        if (window.innerWidth <= 768) $('channelBar').classList.toggle('open');
+    };
+    $('themeToggle').onclick = () => {
+        const cur = document.documentElement.getAttribute('data-theme') || 'dark';
+        const next = cur === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        localStorage.setItem('dc_theme', next);
+    };
+    (() => {
+        const saved = localStorage.getItem('dc_theme') || 'dark';
+        document.documentElement.setAttribute('data-theme', saved);
+    })();
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+    function showToast(text) {
+        const t = $('toast');
+        t.textContent = text;
+        t.classList.add('show');
+        clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove('show'), 3000);
+    }
+
+    function initApp() {
+        const ss = localStorage.getItem('dc_server');
+        const sc = localStorage.getItem('dc_channel');
+        if (ss && sc) {
+            if (ss === 'direct' || serversCache[ss]) {
+                currentServer = ss;
+                if (ss === 'direct') currentChannel = sc;
+                else currentChannel = serversCache[ss].channels[sc] ? sc : Object.keys(serversCache[ss].channels)[0];
             }
-        })();
-    </script>
+        }
+        updateUI();
+    }
+
+    (async () => {
+        const u = localStorage.getItem('dc_user'), p = localStorage.getItem('dc_pass');
+        if (u && p) {
+            $('loginInput').value = u; $('passInput').value = p;
+            await doLogin(u, p, true);
+        } else {
+            $('loginScreen').style.display = 'flex';
+        }
+    })();
+</script>
 </body>
 </html>
