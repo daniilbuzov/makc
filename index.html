@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Мессенджер</title>
+    <title>Мой Мессенджер</title>
     <style>
         :root {
             --bg-primary: #313338;
@@ -143,33 +143,10 @@
         .toast.show { display: block; animation: slideUp 0.3s; }
         @keyframes slideUp { from { opacity: 0; transform: translateX(-50%) translateY(20px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
 
-        /* Мобильные кнопки */
-        .mobile-btn {
-            display: none;
-            background: none;
-            border: none;
-            color: var(--text-primary);
-            font-size: 20px;
-            cursor: pointer;
-            padding: 4px 6px;
-            border-radius: 4px;
-        }
-
         @media (max-width: 768px) {
-            :root { --server-bar-width: 48px; --channel-bar-width: 260px; }
-            .server-bar {
-                position: fixed; top: 0; left: 0; bottom: 0;
-                transform: translateX(-100%); transition: transform .25s;
-                z-index: 20;
-            }
-            .server-bar.open { transform: translateX(0); }
-            .channel-bar {
-                position: fixed; left: var(--server-bar-width); top: 0; bottom: 0;
-                z-index: 15; transform: translateX(-100%); transition: transform .25s;
-                box-shadow: 4px 0 20px rgba(0,0,0,0.3);
-            }
+            :root { --server-bar-width: 48px; --channel-bar-width: 240px; }
+            .channel-bar { position: absolute; left: var(--server-bar-width); top: 0; bottom: 0; z-index: 15; transform: translateX(-100%); transition: transform .25s; box-shadow: 4px 0 20px rgba(0,0,0,0.3); }
             .channel-bar.open { transform: translateX(0); }
-            .mobile-btn { display: inline-block; }
         }
     </style>
 </head>
@@ -177,7 +154,7 @@
 
 <div id="loginScreen">
     <div class="logo">🎧</div>
-    <h1>Discord Мессенджер</h1>
+    <h1>Мой Мессенджер</h1>
     <p style="color:var(--text-secondary)">Войдите или создайте аккаунт</p>
     <div id="loginError" class="error"></div>
     <input type="text" id="loginInput" placeholder="Логин" autocomplete="username">
@@ -186,8 +163,9 @@
     <span style="color:var(--text-secondary);cursor:pointer" id="toggleLogin">Нет аккаунта? Зарегистрироваться</span>
 </div>
 
+<!-- ЭКРАН БАНА -->
 <div id="bannedScreen">
-    <h1>🚫 Вы забанены</h1>
+    <h1>Вы забанены</h1>
     <p>Ваш аккаунт заблокирован администратором.</p>
     <button class="btn" id="bannedLogoutBtn">Выйти</button>
 </div>
@@ -220,8 +198,6 @@
 
     <div class="chat-area" id="chatArea">
         <div class="chat-header">
-            <button class="mobile-btn" id="mobileMenuBtn">☰</button>
-            <button class="mobile-btn" id="mobileChannelsBtn">#</button>
             <span>#</span>
             <span id="chatChannelName">общий</span>
             <span style="font-size:12px;color:var(--text-muted);margin-left:8px" id="chatTopic"></span>
@@ -238,19 +214,125 @@
     </div>
 </div>
 
-<!-- Все модальные окна (полностью из основы) -->
-<div class="modal-overlay" id="serverModal">...</div>
-<div class="modal-overlay" id="channelModal">...</div>
-<div class="modal-overlay" id="settingsModal">...</div>
-<div class="modal-overlay" id="gifModal">...</div>
-<div class="modal-overlay" id="drawModal">...</div>
-<div class="modal-overlay" id="findPeopleModal">...</div>
-<div class="modal-overlay" id="friendRequestsModal">...</div>
-<div class="modal-overlay" id="findServerModal">...</div>
-<div class="modal-overlay" id="serverRequestsModal">...</div>
-<div class="modal-overlay" id="serverIconModal">...</div>
-<div class="modal-overlay" id="memberManageModal">...</div>
-<div class="modal-overlay" id="globalBansModal">...</div>
+<!-- Модалки (все из основы) -->
+<div class="modal-overlay" id="serverModal">
+    <div class="modal">
+        <h3>Создать сервер</h3>
+        <input type="text" id="serverNameInput" placeholder="Название сервера">
+        <button class="btn" id="createServerBtn">Создать</button>
+        <button class="btn close-modal" style="background:transparent;color:var(--text-secondary)">Отмена</button>
+    </div>
+</div>
+<div class="modal-overlay" id="channelModal">
+    <div class="modal">
+        <h3>Создать канал</h3>
+        <input type="text" id="channelNameInput" placeholder="Название канала">
+        <button class="btn" id="createChannelBtn">Создать</button>
+        <button class="btn close-modal" style="background:transparent;color:var(--text-secondary)">Отмена</button>
+    </div>
+</div>
+<div class="modal-overlay" id="settingsModal">
+    <div class="modal">
+        <h3>Настройки</h3>
+        <label style="color:var(--text-secondary)">Аватар (URL)</label>
+        <input type="text" id="avatarUrlInput" placeholder="https://...">
+        <button class="btn" id="saveAvatarBtn">Сохранить</button>
+        <button class="btn red" id="logoutBtn">Выйти</button>
+        <button class="btn close-modal" style="background:transparent;color:var(--text-secondary)">Закрыть</button>
+    </div>
+</div>
+<div class="modal-overlay" id="gifModal">
+    <div class="modal" style="max-width:500px;">
+        <h3>Поиск GIF</h3>
+        <input type="text" id="gifSearchInput" placeholder="Введите запрос...">
+        <div id="gifGrid" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(80px,1fr)); gap:6px; max-height:300px; overflow-y:auto; margin:10px 0;"></div>
+        <button class="btn close-modal" style="background:transparent;color:var(--text-secondary)">Закрыть</button>
+    </div>
+</div>
+<div class="modal-overlay" id="drawModal">
+    <div class="modal">
+        <h3>Текстовый рисунок</h3>
+        <textarea id="drawTextInput" placeholder="Введите символы..."></textarea>
+        <div style="display:flex; gap:10px; margin-bottom:10px;">
+            <label style="color:var(--text-secondary)">Цвет текста</label>
+            <input type="color" id="drawColorInput" value="#ffffff">
+        </div>
+        <div style="display:flex; gap:10px; margin-bottom:10px;">
+            <label style="color:var(--text-secondary)">Цвет фона</label>
+            <input type="color" id="drawBgInput" value="#000000">
+        </div>
+        <button class="btn" id="sendDrawBtn">Отправить рисунок</button>
+        <button class="btn close-modal" style="background:transparent;color:var(--text-secondary)">Отмена</button>
+    </div>
+</div>
+<div class="modal-overlay" id="findPeopleModal">
+    <div class="modal">
+        <h3>Поиск пользователя</h3>
+        <input type="text" id="findPeopleInput" placeholder="Введите ник...">
+        <div id="searchResult" style="margin:10px 0; color:var(--text-secondary)"></div>
+        <button class="btn" id="searchUserBtn">Найти</button>
+        <button class="btn close-modal" style="background:transparent;color:var(--text-secondary)">Закрыть</button>
+    </div>
+</div>
+<div class="modal-overlay" id="friendRequestsModal">
+    <div class="modal" style="max-height:70vh; overflow-y:auto;">
+        <h3>Входящие заявки (друзья)</h3>
+        <div id="friendRequestsList" style="color:var(--text-secondary)">Загрузка...</div>
+        <button class="btn close-modal" style="background:transparent;color:var(--text-secondary); margin-top:10px;">Закрыть</button>
+    </div>
+</div>
+<div class="modal-overlay" id="findServerModal">
+    <div class="modal">
+        <h3>Поиск сервера</h3>
+        <input type="text" id="findServerInput" placeholder="Название сервера...">
+        <div id="serverSearchResult" style="margin:10px 0; color:var(--text-secondary)"></div>
+        <button class="btn" id="searchServerBtn">Найти</button>
+        <button class="btn close-modal" style="background:transparent;color:var(--text-secondary)">Закрыть</button>
+    </div>
+</div>
+<div class="modal-overlay" id="serverRequestsModal">
+    <div class="modal" style="max-height:70vh; overflow-y:auto;">
+        <h3>Заявки на сервер</h3>
+        <div id="serverRequestsList" style="color:var(--text-secondary)">Нет заявок</div>
+        <button class="btn close-modal" style="background:transparent;color:var(--text-secondary); margin-top:10px;">Закрыть</button>
+    </div>
+</div>
+<div class="modal-overlay" id="serverIconModal">
+    <div class="modal">
+        <h3>Изменить иконку сервера</h3>
+        <input type="text" id="serverIconInput" placeholder="URL изображения">
+        <button class="btn" id="saveServerIconBtn">Сохранить</button>
+        <button class="btn close-modal" style="background:transparent;color:var(--text-secondary)">Отмена</button>
+    </div>
+</div>
+<div class="modal-overlay" id="memberManageModal">
+    <div class="modal" style="max-width:500px;">
+        <h3>Управление участниками (владелец сервера)</h3>
+        <div id="memberList" style="color:var(--text-secondary)"></div>
+        <div style="margin-top:10px;">
+            <h4>Забанить пользователя</h4>
+            <input type="text" id="banInput" placeholder="Ник">
+            <button class="btn red" id="banBtn">Забанить</button>
+        </div>
+        <div style="margin-top:10px;">
+            <h4>Забаненные</h4>
+            <div id="bannedList" style="color:var(--text-secondary)"></div>
+        </div>
+        <button class="btn close-modal" style="background:transparent;color:var(--text-secondary); margin-top:10px;">Закрыть</button>
+    </div>
+</div>
+<div class="modal-overlay" id="globalBansModal">
+    <div class="modal">
+        <h3>Глобальные баны (только Даниил)</h3>
+        <div id="globalBansList" style="color:var(--text-secondary)"></div>
+        <!-- Поле для ручного бана -->
+        <div style="margin-top:10px;">
+            <input type="text" id="globalBanInput" placeholder="Ник для бана">
+            <button class="btn red" id="globalBanBtn" style="width:auto;">Забанить</button>
+        </div>
+        <button class="btn close-modal" style="background:transparent;color:var(--text-secondary); margin-top:10px;">Закрыть</button>
+    </div>
+</div>
 <div class="toast" id="toast"></div>
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -297,6 +379,7 @@
             else { localStorage.removeItem('dc_user'); localStorage.removeItem('dc_pass'); }
             await loadAllData();
 
+            // Проверка глобального бана
             if (globalBansCache[currentUser.username]) {
                 showBannedScreen();
                 return;
@@ -365,6 +448,7 @@
         });
         db.ref('globalBans').on('value', snap => {
             globalBansCache = snap.val() || {};
+            // Если текущий пользователь попал в бан во время сессии
             if (currentUser && globalBansCache[currentUser.username]) {
                 showBannedScreen();
             }
@@ -441,6 +525,7 @@
             if (msg.sender === currentUser.username) {
                 extraBtns += `<button class="del" data-id="${msg.id}">✕</button>`;
             }
+            // Глобальный бан (только в глобальном чате, только Даниил, не самого себя, не уже забаненного)
             if (isGlobalChat && isGlobalAdmin() && msg.sender !== currentUser.username && !globalBansCache[msg.sender]) {
                 extraBtns += `<button class="ban-btn" data-ban="${msg.sender}" style="margin-left:4px; background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:12px;">⛔</button>`;
             }
@@ -455,8 +540,10 @@
                 </div>
                 ${extraBtns}
             `;
+            // Удаление своего сообщения
             const delBtn = div.querySelector('.del');
             if (delBtn) delBtn.onclick = () => db.ref(`${activeChatPath}/${msg.id}`).remove();
+            // Глобальный бан
             const banBtn = div.querySelector('.ban-btn');
             if (banBtn) banBtn.onclick = () => banGlobalUser(msg.sender);
             area.appendChild(div);
@@ -466,6 +553,7 @@
 
     async function sendMessage(text, imageUrl = null, drawingData = null) {
         if (!currentUser) return;
+        // Проверка глобального бана
         if (currentServer === 'direct' && currentChannel === 'global' && globalBansCache[currentUser.username]) {
             showToast('Вы забанены в глобальном чате');
             return;
@@ -490,7 +578,7 @@
         $('messageInput').value = '';
     }
 
-    // ========== ГЛОБАЛЬНЫЕ БАНЫ ==========
+    // ========== ГЛОБАЛЬНЫЕ БАНЫ (только Даниил) ==========
     async function banGlobalUser(username) {
         if (!isGlobalAdmin()) return;
         if (!username.trim()) return;
@@ -588,6 +676,7 @@
         showToast(`Заявка от ${username} отклонена`);
     }
 
+    // Бан на сервере – только владелец сервера
     async function banUser(serverId, username) {
         if (!isServerOwner(serverId)) { showToast('Только владелец сервера может банить'); return; }
         if (serversCache[serverId].owner === username) { showToast('Нельзя забанить владельца'); return; }
@@ -649,11 +738,14 @@
         const list = $('channelList');
         list.innerHTML = '';
         $('serverNameHeader').textContent = currentServer === 'direct' ? 'Личные сообщения' : (serversCache[currentServer]?.name || 'Сервер');
+
+        // Кнопка глобальных банов только для Даниила в direct
         $('globalBansBtn').style.display = (isGlobalAdmin() && currentServer === 'direct') ? 'inline-block' : 'none';
 
         if (currentServer !== 'direct') {
             const canManage = canManageServer(currentServer);
             $('serverIconBtn').style.display = canManage ? 'inline-block' : 'none';
+            // Кнопка управления участниками только для владельца сервера
             $('memberManageBtn').style.display = isServerOwner(currentServer) ? 'inline-block' : 'none';
 
             const server = serversCache[currentServer];
@@ -777,10 +869,7 @@
             $('userPanelName').textContent = currentUser.name;
         }
         listenToChat(currentServer, currentChannel);
-        if (window.innerWidth <= 768) {
-            $('channelBar').classList.remove('open');
-            $('serverBar').classList.remove('open');
-        }
+        if (window.innerWidth <= 768) $('channelBar').classList.remove('open');
     }
 
     // ========== ОБРАБОТЧИКИ ==========
@@ -845,6 +934,7 @@
         $('channelNameInput').value = '';
     }
 
+    // Поиск людей
     $('findPeopleBtn').onclick = () => $('findPeopleModal').classList.add('open');
     $('searchUserBtn').onclick = async () => {
         const query = $('findPeopleInput').value.trim();
@@ -867,6 +957,7 @@
         } else resDiv.innerHTML = '<div>Не найден</div>';
     };
 
+    // Заявки друзей
     $('requestsBtn').onclick = () => {
         const incoming = Object.entries(friendsCache).filter(([n,s]) => s === 'incoming');
         const list = $('friendRequestsList');
@@ -889,6 +980,7 @@
         $('friendRequestsModal').classList.add('open');
     };
 
+    // Поиск серверов
     $('findServerBtn').onclick = () => $('findServerModal').classList.add('open');
     $('searchServerBtn').onclick = () => {
         const query = $('findServerInput').value.trim().toLowerCase();
@@ -916,6 +1008,7 @@
         } else resDiv.innerHTML = '<div>Сервер не найден</div>';
     };
 
+    // Иконка сервера
     $('serverIconBtn').onclick = () => {
         if (!canManageServer(currentServer)) return;
         $('serverIconInput').value = serversCache[currentServer]?.icon || '';
@@ -926,6 +1019,7 @@
         $('serverIconModal').classList.remove('open');
     };
 
+    // Управление участниками (владелец сервера)
     $('memberManageBtn').onclick = () => {
         if (!isServerOwner(currentServer)) return;
         const server = serversCache[currentServer];
@@ -954,10 +1048,12 @@
         $('banInput').value = '';
     };
 
+    // Глобальные баны (Даниил) – открытие модалки
     $('globalBansBtn').onclick = () => {
         refreshGlobalBansList();
         $('globalBansModal').classList.add('open');
     };
+    // Ручной бан
     $('globalBanBtn').onclick = () => {
         const target = $('globalBanInput').value.trim();
         if (target) banGlobalUser(target);
@@ -979,39 +1075,6 @@
         const saved = localStorage.getItem('dc_theme') || 'dark';
         document.documentElement.setAttribute('data-theme', saved);
     })();
-
-    // ========== МОБИЛЬНОЕ МЕНЮ ==========
-    const mobileMenuBtn = $('mobileMenuBtn');
-    const mobileChannelsBtn = $('mobileChannelsBtn');
-    function closeAllMobilePanels() {
-        $('serverBar').classList.remove('open');
-        $('channelBar').classList.remove('open');
-    }
-    mobileMenuBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        if ($('serverBar').classList.contains('open')) {
-            closeAllMobilePanels();
-        } else {
-            $('channelBar').classList.remove('open');
-            $('serverBar').classList.add('open');
-        }
-    });
-    mobileChannelsBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        if ($('channelBar').classList.contains('open')) {
-            closeAllMobilePanels();
-        } else {
-            $('serverBar').classList.remove('open');
-            $('channelBar').classList.add('open');
-        }
-    });
-    document.addEventListener('click', (e) => {
-        if (window.innerWidth > 768) return;
-        if (!e.target.closest('.server-bar') && !e.target.closest('.channel-bar') &&
-            e.target !== mobileMenuBtn && e.target !== mobileChannelsBtn) {
-            closeAllMobilePanels();
-        }
-    });
 
     function escapeHtml(text) {
         const div = document.createElement('div');
@@ -1049,4 +1112,4 @@
     })();
 </script>
 </body>
-    </html>
+</html>
