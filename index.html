@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Мой Мессенджер + Звонки + Голосовые</title>
     <style>
-        /* ===== СТИЛИ (те же, без изменений) ===== */
+        /* ===== СТИЛИ ===== */
         :root {
             --bg-primary: #313338;
             --bg-secondary: #2b2d31;
@@ -27,6 +27,7 @@
             --channel-bar-width: 280px;
             --creator-badge: #ffd700;
             --owner-color: #ff4444;
+            --notification-dot: #ff4444;
         }
         [data-theme="light"] {
             --bg-primary: #ffffff;
@@ -40,6 +41,7 @@
             --interactive-hover: #313338;
             --interactive-active: #060607;
             --border: #d9dadd;
+            --notification-dot: #ed4245;
         }
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'gg sans', 'Noto Sans', Helvetica, Arial, sans-serif; }
         body { background: var(--bg-primary); color: var(--text-primary); height: 100vh; overflow: hidden; display: flex; }
@@ -72,6 +74,7 @@
         .server-icon:hover { border-radius: 16px; background: var(--brand); color: #fff; }
         .server-icon.active { border-radius: 16px; background: var(--brand); color: #fff; border-color: var(--interactive-active); }
         .server-icon img { width: 100%; height: 100%; object-fit: cover; }
+        .server-icon .badge-dot { position: absolute; top: 0; right: 0; width: 12px; height: 12px; background: var(--notification-dot); border-radius: 50%; border: 2px solid var(--bg-tertiary); display: none; }
         .server-bar .separator { width: 32px; height: 2px; background: var(--border); border-radius: 1px; margin: 4px 0; }
 
         .channel-bar {
@@ -87,12 +90,16 @@
         .channel-item {
             padding: 8px 16px; margin: 2px 8px; border-radius: 6px; cursor: pointer;
             display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--text-secondary);
+            position: relative;
         }
         .channel-item:hover { background: var(--bg-input); color: var(--text-primary); }
         .channel-item.active { background: var(--bg-input); color: var(--interactive-active); }
         .channel-item .badge { font-size: 10px; background: var(--creator-badge); color: #000; padding: 1px 4px; border-radius: 4px; margin-left: auto; }
         .channel-item .owner-badge { font-size: 10px; background: var(--owner-color); color: #fff; padding: 1px 4px; border-radius: 4px; margin-left: auto; }
         .channel-item .banned-badge { font-size: 10px; background: var(--red); color: #fff; padding: 1px 4px; border-radius: 4px; margin-left: auto; }
+        .channel-item .unread-dot { width: 8px; height: 8px; background: var(--brand); border-radius: 50%; margin-left: auto; display: none; }
+        .channel-item .unread-dot.show { display: block; }
+
         .user-panel {
             padding: 10px; background: var(--bg-secondary); border-top: 1px solid var(--border);
             display: flex; align-items: center; gap: 8px;
@@ -228,7 +235,7 @@
     </div>
 </div>
 
-<!-- ===== МОДАЛКИ ===== -->
+<!-- ===== МОДАЛКИ (сокращённо) ===== -->
 <div class="modal-overlay" id="serverModal">
     <div class="modal">
         <h3>Создать сервер</h3>
@@ -388,9 +395,75 @@
     let isRecording = false;
     let recordingStartTime = 0;
 
+    // Уведомления
+    let notificationPermission = false;
+    let unreadCounts = {}; // { chatId: count }
+    let audioCtx = null;
+
     const $ = id => document.getElementById(id);
     const callModal = document.getElementById('callModal');
     const callContent = document.getElementById('callContent');
+
+    // ========== УВЕДОМЛЕНИЯ ==========
+    function requestNotificationPermission() {
+        if ('Notification' in window) {
+            if (Notification.permission === 'granted') {
+                notificationPermission = true;
+            } else if (Notification.permission !== 'denied') {
+                Notification.requestPermission().then(perm => {
+                    notificationPermission = (perm === 'granted');
+                });
+            }
+        }
+    }
+
+    function playNotificationSound() {
+        try {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.frequency.value = 800;
+            osc.type = 'sine';
+            gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.2);
+        } catch (e) {
+            // fallback: использовать Audio элемента
+            try {
+                const audio = new Audio('data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YV9vT19...'); // короткий звук
+                audio.volume = 0.3;
+                audio.play().catch(() => {});
+            } catch (e2) {}
+        }
+    }
+
+    function sendNotification(title, body, tag) {
+        if (document.hidden) {
+            playNotificationSound();
+            if (notificationPermission) {
+                try {
+                    const notif = new Notification(title, {
+                        body: body,
+                        tag: tag || 'message',
+                        icon: 'https://cdn-icons-png.flaticon.com/512/4712/4712039.png'
+                    });
+                    notif.onclick = () => {
+                        window.focus();
+                        notif.close();
+                    };
+                    setTimeout(() => notif.close(), 8000);
+                } catch (e) {}
+            }
+        } else {
+            // Если окно активно, просто показываем тост
+            showToast(`Новое сообщение от ${title}: ${body}`);
+        }
+    }
 
     // ========== АВТОРИЗАЦИЯ ==========
     async function registerUser(username, password) {
@@ -435,6 +508,7 @@
             }
             $('loginScreen').style.display = 'none';
             $('chatApp').style.display = 'flex';
+            requestNotificationPermission();
             initApp();
         } catch (e) {
             $('loginError').textContent = '❌ ' + e.message;
@@ -569,10 +643,68 @@
             if (data) for (let k in data) msgs.push({ id: k, ...data[k] });
             msgs.sort((a, b) => a.timestamp - b.timestamp);
             renderMessages(msgs);
+            // Сброс счётчика непрочитанных для текущего чата
+            const chatId = server + '_' + channel;
+            if (unreadCounts[chatId]) {
+                unreadCounts[chatId] = 0;
+                updateUnreadBadges();
+            }
         };
         db.ref(path).on('value', cb);
         activeChatPath = path;
         chatListener = cb;
+
+        // Слушаем только новые сообщения для уведомлений
+        db.ref(path).off('child_added', handleNewMessage);
+        db.ref(path).on('child_added', handleNewMessage);
+    }
+
+    function handleNewMessage(snap) {
+        const msg = snap.val();
+        if (!msg || msg.sender === currentUser.username) return;
+        const chatId = currentServer + '_' + currentChannel;
+        // Если это текущий открытый чат, не увеличиваем счётчик
+        if (activeChatPath === getChatPath(currentServer, currentChannel)) {
+            // Если окно не в фокусе, всё равно уведомление
+            if (document.hidden) {
+                const senderName = usersCache[msg.sender]?.name || msg.sender;
+                const text = msg.type === 'voice' ? '🎤 Голосовое сообщение' : (msg.text || 'Сообщение');
+                sendNotification(senderName, text, 'msg_' + msg.sender);
+            }
+            return;
+        }
+        // Иначе увеличиваем счётчик
+        if (!unreadCounts[chatId]) unreadCounts[chatId] = 0;
+        unreadCounts[chatId]++;
+        updateUnreadBadges();
+
+        // Уведомление
+        const senderName = usersCache[msg.sender]?.name || msg.sender;
+        const text = msg.type === 'voice' ? '🎤 Голосовое сообщение' : (msg.text || 'Сообщение');
+        sendNotification(senderName, text, 'msg_' + msg.sender);
+    }
+
+    function updateUnreadBadges() {
+        // Обновляем индикаторы в списке каналов
+        document.querySelectorAll('.channel-item').forEach(item => {
+            const chatId = item.dataset.chatId;
+            if (chatId && unreadCounts[chatId] > 0) {
+                const dot = item.querySelector('.unread-dot');
+                if (dot) dot.classList.add('show');
+            } else {
+                const dot = item.querySelector('.unread-dot');
+                if (dot) dot.classList.remove('show');
+            }
+        });
+        // Обновляем бейдж на иконке сервера (для личных сообщений)
+        const directIcon = document.querySelector('.server-icon[data-server="direct"]');
+        if (directIcon) {
+            const totalUnread = Object.keys(unreadCounts).reduce((sum, key) => sum + (unreadCounts[key] || 0), 0);
+            const dot = directIcon.querySelector('.badge-dot');
+            if (dot) {
+                dot.style.display = totalUnread > 0 ? 'block' : 'none';
+            }
+        }
     }
 
     // ========== ОТОБРАЖЕНИЕ СООБЩЕНИЙ ==========
@@ -867,7 +999,7 @@
         const directIcon = document.createElement('div');
         directIcon.className = 'server-icon' + (currentServer === 'direct' ? ' active' : '');
         directIcon.dataset.server = 'direct';
-        directIcon.textContent = '💬';
+        directIcon.innerHTML = '💬<span class="badge-dot"></span>';
         directIcon.title = 'Личные сообщения';
         directIcon.onclick = () => switchServer('direct');
         bar.appendChild(directIcon);
@@ -934,8 +1066,11 @@
             for (let chId in serversCache[currentServer].channels) {
                 const ch = serversCache[currentServer].channels[chId];
                 const div = document.createElement('div');
-                div.className = 'channel-item' + (currentChannel === chId ? ' active' : '');
-                div.innerHTML = `<span>#</span> ${ch.name}`;
+                div.className = 'channel-item';
+                if (currentChannel === chId) div.classList.add('active');
+                div.dataset.chatId = currentServer + '_' + chId;
+                const unread = unreadCounts[div.dataset.chatId] || 0;
+                div.innerHTML = `<span>#</span> ${ch.name}<span class="unread-dot ${unread > 0 ? 'show' : ''}"></span>`;
                 div.onclick = () => switchChannel(currentServer, chId);
                 list.appendChild(div);
             }
@@ -946,7 +1081,9 @@
             list.innerHTML = '<div class="channel-category">ОБЩИЙ ЧАТ</div>';
             const globalDiv = document.createElement('div');
             globalDiv.className = 'channel-item' + (currentChannel === 'global' ? ' active' : '');
-            globalDiv.innerHTML = '<span>🌍</span> Глобальный чат';
+            globalDiv.dataset.chatId = 'direct_global';
+            const unreadGlobal = unreadCounts['direct_global'] || 0;
+            globalDiv.innerHTML = `<span>🌍</span> Глобальный чат<span class="unread-dot ${unreadGlobal > 0 ? 'show' : ''}"></span>`;
             globalDiv.onclick = () => switchChannel('direct', 'global');
             list.appendChild(globalDiv);
 
@@ -961,11 +1098,13 @@
                     const isBannedGlobally = globalBansCache[friendName];
                     const div = document.createElement('div');
                     div.className = 'channel-item' + (currentChannel === friendName ? ' active' : '');
+                    div.dataset.chatId = 'direct_' + friendName;
+                    const unread = unreadCounts[div.dataset.chatId] || 0;
                     const online = presenceData[friendName];
                     let badge = '';
                     if (isBannedGlobally) badge = '<span class="banned-badge">🚫 Banned</span>';
                     else if (isCreator) badge = '<span class="badge">⭐ Создатель</span>';
-                    div.innerHTML = `<span style="color:${online?'var(--green)':'var(--text-muted)'}">●</span> ${user.name || friendName}${badge}`;
+                    div.innerHTML = `<span style="color:${online?'var(--green)':'var(--text-muted)'}">●</span> ${user.name || friendName}${badge}<span class="unread-dot ${unread > 0 ? 'show' : ''}"></span>`;
                     div.onclick = () => {
                         if (globalBansCache[friendName]) {
                             showToast('Этот пользователь забанен');
@@ -977,6 +1116,7 @@
                 });
             }
         }
+        updateUnreadBadges();
     }
 
     function switchServer(serverId) {
@@ -1231,7 +1371,7 @@
         document.documentElement.setAttribute('data-theme', saved);
     })();
 
-    // ========== ЗВОНКИ ==========
+    // ========== ЗВОНКИ (ИСПРАВЛЕННЫЕ) ==========
     function generateCallId() {
         return `${currentUser.username}_${Date.now()}_${Math.random().toString(36).substr(2,6)}`;
     }
@@ -1299,6 +1439,7 @@
 
     async function acceptCall(callId) {
         try {
+            // Запрашиваем медиа
             try {
                 localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
             } catch (e) {
@@ -1327,8 +1468,9 @@
                 }
             };
 
+            // Получаем offer от звонящего
             const signalsRef = db.ref(`calls/${callId}/signals`);
-            const snap = await signalsRef.orderByChild('timestamp').limitToFirst(1).once('value');
+            const snap = await signalsRef.orderByChild('timestamp').once('value');
             let offerSignal = null;
             snap.forEach(child => {
                 const val = child.val();
@@ -1338,7 +1480,7 @@
             });
 
             if (!offerSignal) {
-                showToast('Ошибка: нет сигнала');
+                showToast('Ошибка: нет сигнала предложения');
                 hangUp();
                 return;
             }
@@ -1349,6 +1491,7 @@
             await peerConnection.setLocalDescription(answer);
             await sendSignal(callId, { type: 'sdp', sdp: answer });
 
+            // Обновляем статус на accepted
             await db.ref(`calls/${callId}/status`).set('accepted');
 
             isCaller = false;
@@ -1356,6 +1499,7 @@
             currentCallId = callId;
             window._incomingCallId = null;
 
+            // Показываем окно разговора
             showCallModal(`
                 <div class="video-container">
                     <video id="remoteVideo" autoplay playsinline></video>
@@ -1366,8 +1510,10 @@
                 </div>
             `);
 
+            // Слушаем сигналы (ICE и повторные SDP)
             listenToSignals(callId);
 
+            // Слушаем изменение статуса (если собеседник завершил)
             callStatusListener = db.ref(`calls/${callId}/status`).on('value', (snap) => {
                 const status = snap.val();
                 if (status === 'ended' || status === 'declined') {
@@ -1384,6 +1530,7 @@
 
     function listenToSignals(callId) {
         const signalsRef = db.ref(`calls/${callId}/signals`);
+        if (callListener) signalsRef.off('child_added', callListener);
         callListener = signalsRef.on('child_added', async (snap) => {
             const data = snap.val();
             if (!data || data.sender === currentUser.username) return;
@@ -1394,8 +1541,12 @@
             try {
                 if (signal.type === 'sdp') {
                     if (signal.sdp && signal.sdp.type === 'answer') {
-                        await peerConnection.setRemoteDescription(new RTCSessionDescription(signal.sdp));
+                        // Обрабатываем answer (если мы звонящий)
+                        if (isCaller) {
+                            await peerConnection.setRemoteDescription(new RTCSessionDescription(signal.sdp));
+                        }
                     } else if (signal.sdp && signal.sdp.type === 'offer') {
+                        // Может быть повторный offer (переговоры)
                         await peerConnection.setRemoteDescription(new RTCSessionDescription(signal.sdp));
                         const answer = await peerConnection.createAnswer();
                         await peerConnection.setLocalDescription(answer);
@@ -1431,6 +1582,7 @@
         }
 
         try {
+            // Запрашиваем медиа
             try {
                 localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
             } catch (e) {
@@ -1463,13 +1615,16 @@
             }
         };
 
+        // Создаём offer
         const offer = await peerConnection.createOffer();
         await peerConnection.setLocalDescription(offer);
 
+        // Генерируем ID звонка
         currentCallId = generateCallId();
         isCaller = true;
         isCallActive = true;
 
+        // Сохраняем в Firebase
         const callRef = db.ref(`calls/${currentCallId}`);
         await callRef.set({
             from: currentUser.username,
@@ -1478,8 +1633,10 @@
             started: firebase.database.ServerValue.TIMESTAMP
         });
 
+        // Отправляем offer
         await sendSignal(currentCallId, { type: 'sdp', sdp: offer });
 
+        // Отображаем модалку ожидания
         showCallModal(`
             <div style="text-align:center; padding:20px;">
                 <h3>Звонок ${usersCache[targetUser]?.name || targetUser}</h3>
@@ -1488,8 +1645,10 @@
             </div>
         `);
 
+        // Слушаем сигналы (ответ)
         listenToSignals(currentCallId);
 
+        // Слушаем статус
         callStatusListener = db.ref(`calls/${currentCallId}/status`).on('value', (snap) => {
             const status = snap.val();
             if (status === 'declined') {
@@ -1499,6 +1658,7 @@
                 showToast('Звонок завершён собеседником');
                 hangUp();
             } else if (status === 'accepted') {
+                // Соединение установлено
                 if (isCallActive && currentCallId) {
                     showCallModal(`
                         <div class="video-container">
@@ -1534,12 +1694,29 @@
         `);
 
         window._incomingCallId = callId;
+        // Воспроизвести звук входящего звонка
+        try {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.frequency.value = 600;
+            osc.type = 'square';
+            gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.5);
+        } catch (e) {}
     }
 
     // ========== ПЕРЕОПРЕДЕЛЕНИЕ updateUI ДЛЯ КНОПКИ ЗВОНКА ==========
     const originalUpdateUI = window.updateUI || function() {};
     window.updateUI = function() {
         originalUpdateUI();
+        // Добавляем кнопку звонка в личных чатах (не глобальный)
         if (currentServer === 'direct' && currentChannel !== 'global') {
             const header = document.querySelector('.chat-header');
             if (!header) return;
