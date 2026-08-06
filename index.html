@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Мой Мессенджер + Звонки + Голосовые</title>
     <style>
-        /* ===== СТИЛИ (полные) ===== */
+        /* ===== СТИЛИ (те же, без изменений) ===== */
         :root {
             --bg-primary: #313338;
             --bg-secondary: #2b2d31;
@@ -93,7 +93,6 @@
         .channel-item .badge { font-size: 10px; background: var(--creator-badge); color: #000; padding: 1px 4px; border-radius: 4px; margin-left: auto; }
         .channel-item .owner-badge { font-size: 10px; background: var(--owner-color); color: #fff; padding: 1px 4px; border-radius: 4px; margin-left: auto; }
         .channel-item .banned-badge { font-size: 10px; background: var(--red); color: #fff; padding: 1px 4px; border-radius: 4px; margin-left: auto; }
-        .channel-item .ai-badge { font-size: 10px; background: #9b59b6; color: #fff; padding: 1px 4px; border-radius: 4px; margin-left: auto; }
         .user-panel {
             padding: 10px; background: var(--bg-secondary); border-top: 1px solid var(--border);
             display: flex; align-items: center; gap: 8px;
@@ -116,7 +115,6 @@
         .msg .sender { font-weight: 500; font-size: 13px; margin-right: 8px; }
         .msg .sender .badge { font-size: 10px; background: var(--creator-badge); color: #000; padding: 1px 4px; border-radius: 4px; margin-left: 4px; }
         .msg .sender .owner-badge { font-size: 10px; background: var(--owner-color); color: #fff; padding: 1px 4px; border-radius: 4px; margin-left: 4px; }
-        .msg .sender .ai-badge { font-size: 10px; background: #9b59b6; color: #fff; padding: 1px 4px; border-radius: 4px; margin-left: 4px; }
         .msg .time { font-size: 10px; color: var(--text-muted); margin-left: 4px; }
         .msg .text { margin-top: 2px; white-space: pre-wrap; }
         .msg img { max-width: 240px; max-height: 180px; border-radius: 6px; margin-top: 4px; cursor: pointer; }
@@ -216,7 +214,6 @@
             <span>#</span>
             <span id="chatChannelName">общий</span>
             <span style="font-size:12px;color:var(--text-muted);margin-left:8px" id="chatTopic"></span>
-            <span style="margin-left:auto;font-size:12px;color:var(--text-muted);" id="aiStatus">🤖 DeepSeek: вкл</span>
         </div>
         <div class="messages-area" id="messagesArea">
             <div style="color:var(--text-muted);text-align:center;margin-top:60px;">💬 Начните общение</div>
@@ -358,8 +355,6 @@
     // ===== КОНСТАНТЫ =====
     const DB_URL = 'https://makc-894d6-default-rtdb.firebaseio.com/';
     const GIPHY_KEY = 'd6yTgfwrs03OJkuyfjfPiPmNp4fUDbEY';
-    const DEEPSEEK_API_KEY = 'sk-eddd5a363be245f4b54f2c2e4d0eee31';
-    const PROXY_URL = 'https://deepseek-proxy.glitch.me/';
 
     firebase.initializeApp({ databaseURL: DB_URL });
     const db = firebase.database();
@@ -376,7 +371,6 @@
     let friendsCache = {};
     let presenceData = {};
     let globalBansCache = {};
-    let botEnabled = true;
 
     // Звонки
     let peerConnection = null;
@@ -441,7 +435,6 @@
             }
             $('loginScreen').style.display = 'none';
             $('chatApp').style.display = 'flex';
-            await initBot();
             initApp();
         } catch (e) {
             $('loginError').textContent = '❌ ' + e.message;
@@ -532,89 +525,6 @@
         db.ref(`presence/${currentUser.username}`).onDisconnect().remove();
     }
 
-    // ========== БОТ ==========
-    async function initBot() {
-        const botName = 'DeepSeekBot';
-        const snap = await db.ref(`users/${botName}`).once('value');
-        if (!snap.exists()) {
-            await db.ref(`users/${botName}`).set({
-                password: 'bot_password',
-                name: botName,
-                avatar: ''
-            });
-            usersCache[botName] = { name: botName, avatar: '' };
-        } else {
-            usersCache[botName] = snap.val();
-        }
-
-        if (!friendsCache[botName]) {
-            await db.ref(`friends/${currentUser.username}/${botName}`).set('accepted');
-            await db.ref(`friends/${botName}/${currentUser.username}`).set('accepted');
-            friendsCache[botName] = 'accepted';
-        }
-
-        startGlobalBotListener();
-        renderChannelList();
-    }
-
-    let globalBotListener = null;
-
-    function startGlobalBotListener() {
-        if (globalBotListener) {
-            db.ref('messages/global').off('child_added', globalBotListener);
-        }
-        globalBotListener = async (snap) => {
-            const msg = snap.val();
-            if (!msg || msg.sender === 'DeepSeekBot') return;
-            if (!botEnabled) return;
-            const text = msg.text || '';
-            const lower = text.toLowerCase();
-            if (lower.includes('@deepseekbot') || lower.startsWith('/ai ')) {
-                let question = text.replace(/@deepseekbot/gi, '').replace(/\/ai\s*/i, '').trim();
-                if (!question) question = 'Привет! Чем могу помочь?';
-                const answer = await askDeepSeek(question);
-                await db.ref('messages/global').push({
-                    sender: 'DeepSeekBot',
-                    text: answer,
-                    timestamp: firebase.database.ServerValue.TIMESTAMP
-                });
-            }
-        };
-        db.ref('messages/global').on('child_added', globalBotListener);
-    }
-
-    async function askDeepSeek(prompt) {
-        try {
-            const response = await fetch(PROXY_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    apiKey: DEEPSEEK_API_KEY,
-                    model: 'deepseek-chat',
-                    messages: [{ role: 'user', content: prompt }],
-                    max_tokens: 500
-                })
-            });
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
-            const data = await response.json();
-            if (data.choices && data.choices.length > 0) {
-                return data.choices[0].message.content || 'Ответ пуст.';
-            } else {
-                return 'Ошибка: неожиданный ответ от AI.';
-            }
-        } catch (e) {
-            console.error('Ошибка DeepSeek:', e);
-            const fallbacks = [
-                'Извините, я временно не могу подключиться к серверу. Попробуйте позже!',
-                'Ой! Похоже, у меня проблемы с интернетом. Давайте поговорим позже 😊',
-                'Не удалось соединиться с DeepSeek. Но я здесь, чтобы поддержать беседу!',
-                'Технические шоколадки 🍫. Попробуйте ещё раз через минутку.',
-                'Мой мозг перегрелся 🌡️. Дайте мне немного остыть.'
-            ];
-            return fallbacks[Math.floor(Math.random() * fallbacks.length)];
-        }
-    }
-
     // ========== ПРАВА, ПУТИ ==========
     function isServerOwner(serverId) {
         return serversCache[serverId] && serversCache[serverId].owner === currentUser.username;
@@ -665,7 +575,7 @@
         chatListener = cb;
     }
 
-    // ========== ОТОБРАЖЕНИЕ СООБЩЕНИЙ (с голосовыми) ==========
+    // ========== ОТОБРАЖЕНИЕ СООБЩЕНИЙ ==========
     function renderMessages(msgs) {
         const area = $('messagesArea');
         area.innerHTML = '';
@@ -681,12 +591,9 @@
             const sender = usersCache[msg.sender] || { name: msg.sender, avatar: '' };
             const isCreator = sender.name === 'Даниил';
             const isOwner = currentServer !== 'direct' && msg.sender === serverOwner;
-            const isBot = msg.sender === 'DeepSeekBot';
 
             let avatarHtml = '';
-            if (isBot) {
-                avatarHtml = `<span style="font-size:20px;">🤖</span>`;
-            } else if (sender.avatar) {
+            if (sender.avatar) {
                 avatarHtml = `<img src="${sender.avatar}" onerror="this.style.display='none'; this.parentElement.textContent='${sender.name.charAt(0).toUpperCase()}'">`;
             } else {
                 avatarHtml = sender.name.charAt(0).toUpperCase();
@@ -702,7 +609,6 @@
             let badgeHtml = '';
             if (isCreator) badgeHtml += '<span class="badge">⭐ Создатель</span>';
             if (isOwner) badgeHtml += '<span class="owner-badge">[Владелец]</span>';
-            if (isBot) badgeHtml += '<span class="ai-badge">🤖 DeepSeek</span>';
 
             let voiceHtml = '';
             if (msg.type === 'voice' && msg.voiceData) {
@@ -714,7 +620,7 @@
             div.innerHTML = `
                 <div class="avatar-small">${avatarHtml}</div>
                 <div class="content">
-                    <span class="sender" style="color:${isBot ? '#9b59b6' : (isOwner ? 'var(--owner-color)' : 'var(--interactive-active)')};">${sender.name || msg.sender}${badgeHtml}</span>
+                    <span class="sender" style="color:${isOwner ? 'var(--owner-color)' : 'var(--interactive-active)'};">${sender.name || msg.sender}${badgeHtml}</span>
                     <span class="time">${new Date(msg.timestamp).toLocaleTimeString('ru-RU', {hour:'2-digit',minute:'2-digit'})}</span>
                     <div class="text">${msg.type === 'voice' ? '🎤 Голосовое сообщение' : escapeHtml(msg.text||'')}</div>
                     ${voiceHtml}
@@ -732,7 +638,7 @@
         area.scrollTop = area.scrollHeight;
     }
 
-    // ========== ОТПРАВКА СООБЩЕНИЙ (включая голосовые) ==========
+    // ========== ОТПРАВКА СООБЩЕНИЙ ==========
     async function sendMessage(text, imageUrl = null, drawingData = null) {
         if (!currentUser) return;
         if (currentServer === 'direct' && currentChannel === 'global' && globalBansCache[currentUser.username]) {
@@ -757,18 +663,6 @@
         }
         await db.ref(activeChatPath).push(msg);
         $('messageInput').value = '';
-
-        if (botEnabled && currentServer === 'direct' && currentChannel === 'DeepSeekBot' && text && text.trim()) {
-            const question = text.trim();
-            const answer = await askDeepSeek(question);
-            if (answer) {
-                await db.ref(activeChatPath).push({
-                    sender: 'DeepSeekBot',
-                    text: answer,
-                    timestamp: firebase.database.ServerValue.TIMESTAMP
-                });
-            }
-        }
     }
 
     // ===== ОТПРАВКА ГОЛОСОВОГО =====
@@ -887,7 +781,6 @@
     // ========== ДРУЗЬЯ И СЕРВЕРЫ ==========
     async function sendFriendRequest(toUsername) {
         if (toUsername === currentUser.username) { showToast('Нельзя добавить самого себя'); return; }
-        if (toUsername === 'DeepSeekBot') { showToast('Бот уже в друзьях'); return; }
         const snap = await db.ref(`users/${toUsername}`).once('value');
         if (!snap.exists()) { showToast('Пользователь не найден'); return; }
         if (friendsCache[toUsername] === 'accepted') { showToast('Вы уже друзья'); return; }
@@ -1066,15 +959,13 @@
                     const user = usersCache[friendName] || { name: friendName, avatar: '' };
                     const isCreator = user.name === 'Даниил';
                     const isBannedGlobally = globalBansCache[friendName];
-                    const isBot = friendName === 'DeepSeekBot';
                     const div = document.createElement('div');
                     div.className = 'channel-item' + (currentChannel === friendName ? ' active' : '');
                     const online = presenceData[friendName];
                     let badge = '';
                     if (isBannedGlobally) badge = '<span class="banned-badge">🚫 Banned</span>';
-                    else if (isBot) badge = '<span class="ai-badge">🤖 DeepSeek</span>';
                     else if (isCreator) badge = '<span class="badge">⭐ Создатель</span>';
-                    div.innerHTML = `<span style="color:${isBot ? '#9b59b6' : (online?'var(--green)':'var(--text-muted)')}">●</span> ${user.name || friendName}${badge}`;
+                    div.innerHTML = `<span style="color:${online?'var(--green)':'var(--text-muted)'}">●</span> ${user.name || friendName}${badge}`;
                     div.onclick = () => {
                         if (globalBansCache[friendName]) {
                             showToast('Этот пользователь забанен');
@@ -1103,11 +994,11 @@
 
     function switchChannel(server, channel) {
         if (server === 'direct' && channel !== 'global') {
-            if (channel !== 'DeepSeekBot' && globalBansCache[channel]) {
+            if (globalBansCache[channel]) {
                 showToast('Этот пользователь забанен');
                 return;
             }
-            if (channel !== 'DeepSeekBot' && friendsCache[channel] !== 'accepted') {
+            if (friendsCache[channel] !== 'accepted') {
                 showToast('Вы не друзья');
                 return;
             }
@@ -1130,9 +1021,6 @@
             const name = currentChannel === 'global' ? 'Глобальный чат' : (usersCache[currentChannel]?.name || currentChannel);
             $('chatChannelName').textContent = name;
             $('chatTopic').textContent = '';
-            if (currentChannel === 'DeepSeekBot') {
-                $('chatTopic').textContent = '🤖 DeepSeek AI';
-            }
         } else {
             const ch = serversCache[currentServer]?.channels[currentChannel];
             $('chatChannelName').textContent = ch?.name || currentChannel;
@@ -1652,7 +1540,7 @@
     const originalUpdateUI = window.updateUI || function() {};
     window.updateUI = function() {
         originalUpdateUI();
-        if (currentServer === 'direct' && currentChannel !== 'global' && currentChannel !== 'DeepSeekBot') {
+        if (currentServer === 'direct' && currentChannel !== 'global') {
             const header = document.querySelector('.chat-header');
             if (!header) return;
             const oldBtn = header.querySelector('.call-btn');
@@ -1669,12 +1557,7 @@
                     showToast('Нельзя позвонить этому пользователю');
                 }
             };
-            const aiStatus = header.querySelector('#aiStatus');
-            if (aiStatus) {
-                header.insertBefore(btn, aiStatus);
-            } else {
-                header.appendChild(btn);
-            }
+            header.appendChild(btn);
         }
     };
 
