@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Мой Мессенджер + Звонки + Голосовые</title>
+    <title>Монту</title>
     <style>
-        /* ===== СТИЛИ ===== */
+        /* ===== СТИЛИ (БЕЗ ИЗМЕНЕНИЙ) ===== */
         :root {
             --bg-primary: #313338;
             --bg-secondary: #2b2d31;
@@ -235,7 +235,7 @@
     </div>
 </div>
 
-<!-- ===== МОДАЛКИ (сокращённо) ===== -->
+<!-- ===== МОДАЛКИ ===== -->
 <div class="modal-overlay" id="serverModal">
     <div class="modal">
         <h3>Создать сервер</h3>
@@ -384,7 +384,7 @@
     let localStream = null;
     let remoteStream = null;
     let currentCallId = null;
-    let callListener = null;
+    let callSignalListener = null; // !!! переименовал для ясности
     let isCaller = false;
     let isCallActive = false;
     let callStatusListener = null;
@@ -397,14 +397,14 @@
 
     // Уведомления
     let notificationPermission = false;
-    let unreadCounts = {}; // { chatId: count }
+    let unreadCounts = {};
     let audioCtx = null;
 
     const $ = id => document.getElementById(id);
     const callModal = document.getElementById('callModal');
     const callContent = document.getElementById('callContent');
 
-    // ========== УВЕДОМЛЕНИЯ ==========
+    // ========== УВЕДОМЛЕНИЯ (БЕЗ ИЗМЕНЕНИЙ) ==========
     function requestNotificationPermission() {
         if ('Notification' in window) {
             if (Notification.permission === 'granted') {
@@ -433,9 +433,8 @@
             osc.start();
             osc.stop(audioCtx.currentTime + 0.2);
         } catch (e) {
-            // fallback: использовать Audio элемента
             try {
-                const audio = new Audio('data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YV9vT19...'); // короткий звук
+                const audio = new Audio('data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YV9vT19...');
                 audio.volume = 0.3;
                 audio.play().catch(() => {});
             } catch (e2) {}
@@ -460,7 +459,6 @@
                 } catch (e) {}
             }
         } else {
-            // Если окно активно, просто показываем тост
             showToast(`Новое сообщение от ${title}: ${body}`);
         }
     }
@@ -633,10 +631,13 @@
         return `messages/servers/${server}/${channel}`;
     }
 
+    // ========== ПРОСЛУШИВАНИЕ ЧАТОВ (С ИСПРАВЛЕННЫМИ УВЕДОМЛЕНИЯМИ) ==========
     function listenToChat(server, channel) {
         const path = getChatPath(server, channel);
         if (path === activeChatPath && chatListener) return;
         if (activeChatPath && chatListener) db.ref(activeChatPath).off('value', chatListener);
+        // !!! ИСПРАВЛЕНО: сохраняем контекст чата для уведомлений
+        const chatId = server + '_' + channel;
         const cb = snap => {
             const msgs = [];
             const data = snap.val();
@@ -644,7 +645,6 @@
             msgs.sort((a, b) => a.timestamp - b.timestamp);
             renderMessages(msgs);
             // Сброс счётчика непрочитанных для текущего чата
-            const chatId = server + '_' + channel;
             if (unreadCounts[chatId]) {
                 unreadCounts[chatId] = 0;
                 updateUnreadBadges();
@@ -654,38 +654,36 @@
         activeChatPath = path;
         chatListener = cb;
 
-        // Слушаем только новые сообщения для уведомлений
-        db.ref(path).off('child_added', handleNewMessage);
-        db.ref(path).on('child_added', handleNewMessage);
-    }
-
-    function handleNewMessage(snap) {
-        const msg = snap.val();
-        if (!msg || msg.sender === currentUser.username) return;
-        const chatId = currentServer + '_' + currentChannel;
-        // Если это текущий открытый чат, не увеличиваем счётчик
-        if (activeChatPath === getChatPath(currentServer, currentChannel)) {
-            // Если окно не в фокусе, всё равно уведомление
-            if (document.hidden) {
-                const senderName = usersCache[msg.sender]?.name || msg.sender;
-                const text = msg.type === 'voice' ? '🎤 Голосовое сообщение' : (msg.text || 'Сообщение');
-                sendNotification(senderName, text, 'msg_' + msg.sender);
-            }
-            return;
+        // Отписываемся от старого обработчика новых сообщений, чтобы не было дублей
+        if (window._newMsgListener) {
+            db.ref(activeChatPath).off('child_added', window._newMsgListener);
         }
-        // Иначе увеличиваем счётчик
-        if (!unreadCounts[chatId]) unreadCounts[chatId] = 0;
-        unreadCounts[chatId]++;
-        updateUnreadBadges();
+        // !!! ИСПРАВЛЕНО: передаём chatId в замыкание
+        window._newMsgListener = (snap) => {
+            const msg = snap.val();
+            if (!msg || msg.sender === currentUser.username) return;
+            // Если это текущий открытый чат, не увеличиваем счётчик
+            if (activeChatPath === getChatPath(server, channel)) {
+                if (document.hidden) {
+                    const senderName = usersCache[msg.sender]?.name || msg.sender;
+                    const text = msg.type === 'voice' ? '🎤 Голосовое сообщение' : (msg.text || 'Сообщение');
+                    sendNotification(senderName, text, 'msg_' + msg.sender);
+                }
+                return;
+            }
+            // Иначе увеличиваем счётчик
+            if (!unreadCounts[chatId]) unreadCounts[chatId] = 0;
+            unreadCounts[chatId]++;
+            updateUnreadBadges();
 
-        // Уведомление
-        const senderName = usersCache[msg.sender]?.name || msg.sender;
-        const text = msg.type === 'voice' ? '🎤 Голосовое сообщение' : (msg.text || 'Сообщение');
-        sendNotification(senderName, text, 'msg_' + msg.sender);
+            const senderName = usersCache[msg.sender]?.name || msg.sender;
+            const text = msg.type === 'voice' ? '🎤 Голосовое сообщение' : (msg.text || 'Сообщение');
+            sendNotification(senderName, text, 'msg_' + msg.sender);
+        };
+        db.ref(path).on('child_added', window._newMsgListener);
     }
 
     function updateUnreadBadges() {
-        // Обновляем индикаторы в списке каналов
         document.querySelectorAll('.channel-item').forEach(item => {
             const chatId = item.dataset.chatId;
             if (chatId && unreadCounts[chatId] > 0) {
@@ -696,7 +694,6 @@
                 if (dot) dot.classList.remove('show');
             }
         });
-        // Обновляем бейдж на иконке сервера (для личных сообщений)
         const directIcon = document.querySelector('.server-icon[data-server="direct"]');
         if (directIcon) {
             const totalUnread = Object.keys(unreadCounts).reduce((sum, key) => sum + (unreadCounts[key] || 0), 0);
@@ -1174,7 +1171,7 @@
         if (window.innerWidth <= 768) $('channelBar').classList.remove('open');
     }
 
-    // ========== ОБРАБОТЧИКИ ==========
+    // ========== ОБРАБОТЧИКИ (кроме звонков) ==========
     $('sendBtn').onclick = () => sendMessage($('messageInput').value);
     $('messageInput').onkeydown = e => { if (e.key === 'Enter') sendMessage($('messageInput').value); };
     $('gifBtn').onclick = () => $('gifModal').classList.add('open');
@@ -1371,12 +1368,13 @@
         document.documentElement.setAttribute('data-theme', saved);
     })();
 
-    // ========== ЗВОНКИ (ИСПРАВЛЕННЫЕ) ==========
+    // ========== ЗВОНКИ (ПОЛНОСТЬЮ ПЕРЕПИСАНЫ) ==========
     function generateCallId() {
         return `${currentUser.username}_${Date.now()}_${Math.random().toString(36).substr(2,6)}`;
     }
 
     function sendSignal(callId, signal) {
+        console.log('[Звонок] Отправка сигнала:', signal.type, signal);
         return db.ref(`calls/${callId}/signals`).push({
             sender: currentUser.username,
             signal: signal,
@@ -1400,6 +1398,7 @@
     }
 
     async function hangUp() {
+        console.log('[Звонок] Завершение звонка');
         if (peerConnection) {
             peerConnection.close();
             peerConnection = null;
@@ -1414,9 +1413,9 @@
         }
         if (currentCallId) {
             await db.ref(`calls/${currentCallId}/status`).set('ended');
-            if (callListener) {
-                db.ref(`calls/${currentCallId}/signals`).off('child_added', callListener);
-                callListener = null;
+            if (callSignalListener) {
+                db.ref(`calls/${currentCallId}/signals`).off('child_added', callSignalListener);
+                callSignalListener = null;
             }
             if (callStatusListener) {
                 db.ref(`calls/${currentCallId}/status`).off('value', callStatusListener);
@@ -1431,27 +1430,35 @@
     }
 
     async function declineCall(callId) {
+        console.log('[Звонок] Отклонение звонка', callId);
         await db.ref(`calls/${callId}/status`).set('declined');
         closeCallModal();
         showToast('Звонок отклонён');
         window._incomingCallId = null;
     }
 
+    // ===== ПРИНЯТИЕ ЗВОНКА (ИСПРАВЛЕННОЕ) =====
     async function acceptCall(callId) {
+        console.log('[Звонок] Принятие звонка', callId);
         try {
-            // Запрашиваем медиа
+            // 1. Запрашиваем медиа
             try {
                 localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
             } catch (e) {
+                console.warn('[Звонок] Видео недоступно, используем только аудио');
                 localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
             }
 
+            // 2. Создаём PeerConnection
             const configuration = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
             peerConnection = new RTCPeerConnection(configuration);
 
+            // 3. Добавляем локальные треки
             localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
 
+            // 4. Обработчик удалённых потоков
             peerConnection.ontrack = (event) => {
+                console.log('[Звонок] Получен удалённый поток');
                 if (event.streams && event.streams[0]) {
                     remoteStream = event.streams[0];
                     const remoteVideo = document.getElementById('remoteVideo');
@@ -1462,16 +1469,19 @@
                 }
             };
 
+            // 5. Обработчик ICE-кандидатов
             peerConnection.onicecandidate = (event) => {
                 if (event.candidate) {
+                    console.log('[Звонок] Отправка ICE-кандидата');
                     sendSignal(callId, { type: 'ice', candidate: event.candidate });
                 }
             };
 
-            // Получаем offer от звонящего
+            // 6. Получаем offer от звонящего (ожидаем сигнал)
             const signalsRef = db.ref(`calls/${callId}/signals`);
-            const snap = await signalsRef.orderByChild('timestamp').once('value');
+            // Проверяем, нет ли уже сохранённого offer
             let offerSignal = null;
+            const snap = await signalsRef.orderByChild('timestamp').once('value');
             snap.forEach(child => {
                 const val = child.val();
                 if (val.signal && val.signal.type === 'sdp' && val.signal.sdp && val.signal.sdp.type === 'offer') {
@@ -1479,14 +1489,32 @@
                 }
             });
 
+            // Если offer не найден, ждём новый сигнал
+            if (!offerSignal) {
+                console.log('[Звонок] Ожидание offer...');
+                const waitForOffer = new Promise((resolve) => {
+                    const listener = signalsRef.limitToLast(1).on('child_added', (snap) => {
+                        const val = snap.val();
+                        if (val.signal && val.signal.type === 'sdp' && val.signal.sdp && val.signal.sdp.type === 'offer') {
+                            offerSignal = val.signal;
+                            signalsRef.off('child_added', listener);
+                            resolve();
+                        }
+                    });
+                });
+                await waitForOffer;
+            }
+
             if (!offerSignal) {
                 showToast('Ошибка: нет сигнала предложения');
                 hangUp();
                 return;
             }
 
+            console.log('[Звонок] Offer получен');
             await peerConnection.setRemoteDescription(new RTCSessionDescription(offerSignal.sdp));
 
+            // Создаём answer
             const answer = await peerConnection.createAnswer();
             await peerConnection.setLocalDescription(answer);
             await sendSignal(callId, { type: 'sdp', sdp: answer });
@@ -1513,7 +1541,7 @@
             // Слушаем сигналы (ICE и повторные SDP)
             listenToSignals(callId);
 
-            // Слушаем изменение статуса (если собеседник завершил)
+            // Слушаем статус
             callStatusListener = db.ref(`calls/${callId}/status`).on('value', (snap) => {
                 const status = snap.val();
                 if (status === 'ended' || status === 'declined') {
@@ -1522,31 +1550,33 @@
             });
 
         } catch (e) {
-            console.error('Ошибка принятия звонка:', e);
-            showToast('Ошибка при подключении');
+            console.error('[Звонок] Ошибка при принятии:', e);
+            showToast('Ошибка при подключении: ' + e.message);
             hangUp();
         }
     }
 
+    // ===== СЛУШАТЕЛЬ СИГНАЛОВ =====
     function listenToSignals(callId) {
         const signalsRef = db.ref(`calls/${callId}/signals`);
-        if (callListener) signalsRef.off('child_added', callListener);
-        callListener = signalsRef.on('child_added', async (snap) => {
+        if (callSignalListener) signalsRef.off('child_added', callSignalListener);
+        callSignalListener = signalsRef.on('child_added', async (snap) => {
             const data = snap.val();
             if (!data || data.sender === currentUser.username) return;
-
             const signal = data.signal;
             if (!signal) return;
 
             try {
                 if (signal.type === 'sdp') {
                     if (signal.sdp && signal.sdp.type === 'answer') {
-                        // Обрабатываем answer (если мы звонящий)
+                        // Мы звонящий — обрабатываем answer
                         if (isCaller) {
+                            console.log('[Звонок] Получен answer, устанавливаем удалённое описание');
                             await peerConnection.setRemoteDescription(new RTCSessionDescription(signal.sdp));
                         }
                     } else if (signal.sdp && signal.sdp.type === 'offer') {
-                        // Может быть повторный offer (переговоры)
+                        // Повторный offer (переговоры)
+                        console.log('[Звонок] Получен повторный offer');
                         await peerConnection.setRemoteDescription(new RTCSessionDescription(signal.sdp));
                         const answer = await peerConnection.createAnswer();
                         await peerConnection.setLocalDescription(answer);
@@ -1554,20 +1584,23 @@
                     }
                 } else if (signal.type === 'ice') {
                     if (signal.candidate) {
+                        console.log('[Звонок] Получен ICE-кандидат');
                         try {
                             await peerConnection.addIceCandidate(new RTCIceCandidate(signal.candidate));
                         } catch (e) {
-                            console.warn('ICE candidate error:', e);
+                            console.warn('[Звонок] Ошибка добавления ICE кандидата:', e);
                         }
                     }
                 }
             } catch (e) {
-                console.error('Ошибка обработки сигнала:', e);
+                console.error('[Звонок] Ошибка обработки сигнала:', e);
             }
         });
     }
 
+    // ===== НАЧАЛО ЗВОНКА (ИСПРАВЛЕННОЕ) =====
     async function startCall(targetUser) {
+        console.log('[Звонок] Начало звонка для', targetUser);
         if (!targetUser || targetUser === currentUser.username) {
             showToast('Нельзя позвонить самому себе');
             return;
@@ -1586,6 +1619,7 @@
             try {
                 localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
             } catch (e) {
+                console.warn('[Звонок] Видео недоступно, используем только аудио');
                 localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
             }
         } catch (e) {
@@ -1599,6 +1633,7 @@
         localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
 
         peerConnection.ontrack = (event) => {
+            console.log('[Звонок] Получен удалённый поток (входящий)');
             if (event.streams && event.streams[0]) {
                 remoteStream = event.streams[0];
                 const remoteVideo = document.getElementById('remoteVideo');
@@ -1611,6 +1646,7 @@
 
         peerConnection.onicecandidate = (event) => {
             if (event.candidate) {
+                console.log('[Звонок] Отправка ICE-кандидата (исходящий)');
                 sendSignal(currentCallId, { type: 'ice', candidate: event.candidate });
             }
         };
@@ -1618,6 +1654,7 @@
         // Создаём offer
         const offer = await peerConnection.createOffer();
         await peerConnection.setLocalDescription(offer);
+        console.log('[Звонок] Offer создан');
 
         // Генерируем ID звонка
         currentCallId = generateCallId();
@@ -1645,12 +1682,13 @@
             </div>
         `);
 
-        // Слушаем сигналы (ответ)
+        // Слушаем сигналы
         listenToSignals(currentCallId);
 
         // Слушаем статус
         callStatusListener = db.ref(`calls/${currentCallId}/status`).on('value', (snap) => {
             const status = snap.val();
+            console.log('[Звонок] Статус изменился:', status);
             if (status === 'declined') {
                 showToast('Звонок отклонён');
                 hangUp();
@@ -1675,6 +1713,7 @@
     }
 
     function handleIncomingCall(callId, callData) {
+        console.log('[Звонок] Входящий звонок от', callData.from);
         if (isCallActive) {
             db.ref(`calls/${callId}/status`).set('busy');
             return;
@@ -1694,7 +1733,7 @@
         `);
 
         window._incomingCallId = callId;
-        // Воспроизвести звук входящего звонка
+        // Звук входящего звонка
         try {
             if (!audioCtx) {
                 audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -1712,11 +1751,11 @@
         } catch (e) {}
     }
 
-    // ========== ПЕРЕОПРЕДЕЛЕНИЕ updateUI ДЛЯ КНОПКИ ЗВОНКА ==========
+    // ========== ИНТЕГРАЦИЯ ЗВОНКОВ В UI ==========
     const originalUpdateUI = window.updateUI || function() {};
     window.updateUI = function() {
         originalUpdateUI();
-        // Добавляем кнопку звонка в личных чатах (не глобальный)
+        // Добавляем кнопку звонка в личных чатах
         if (currentServer === 'direct' && currentChannel !== 'global') {
             const header = document.querySelector('.chat-header');
             if (!header) return;
@@ -1738,7 +1777,7 @@
         }
     };
 
-    // ========== ПОДПИСКА НА ВХОДЯЩИЕ ЗВОНКИ ==========
+    // Подписка на входящие звонки
     const originalDoLogin = window.doLogin;
     window.doLogin = async function(u, p, remember) {
         await originalDoLogin(u, p, remember);
@@ -1755,12 +1794,12 @@
         }
     };
 
-    // ========== ЗАВЕРШЕНИЕ ПРИ ЗАКРЫТИИ ВКЛАДКИ ==========
+    // Завершение при закрытии вкладки
     window.addEventListener('beforeunload', () => {
         if (isCallActive) hangUp();
     });
 
-    // ========== ПЕРЕОПРЕДЕЛЕНИЕ LOGOUT ==========
+    // Переопределяем logout
     const originalLogout = document.getElementById('logoutBtn')?.onclick;
     if (document.getElementById('logoutBtn')) {
         document.getElementById('logoutBtn').onclick = function() {
@@ -1769,10 +1808,10 @@
         };
     }
 
-    // ========== ГОЛОСОВЫЕ - ОБРАБОТЧИК КНОПКИ ==========
+    // ========== ГОЛОСОВЫЕ - КНОПКА ==========
     document.getElementById('voiceBtn').addEventListener('click', startRecording);
 
-    // ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==========
+    // ========== ВСПОМОГАТЕЛЬНЫЕ ==========
     function escapeHtml(text) {
         const div = document.createElement('div');
         div.textContent = text;
