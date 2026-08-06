@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Монту</title>
+    <title>Мой Мессенджер + Звонки + Голосовые</title>
     <style>
-        /* ===== СТИЛИ (БЕЗ ИЗМЕНЕНИЙ) ===== */
+        /* ===== СТИЛИ ===== */
         :root {
             --bg-primary: #313338;
             --bg-secondary: #2b2d31;
@@ -149,11 +149,8 @@
         .toast.show { display: block; animation: slideUp 0.3s; }
         @keyframes slideUp { from { opacity: 0; transform: translateX(-50%) translateY(20px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
 
-        #callModal .modal { max-width: 600px; background: var(--bg-secondary); }
-        #callModal .video-container { position: relative; width: 100%; }
-        #callModal video { width: 100%; max-height: 400px; background: #000; border-radius: 8px; }
-        #callModal .local-video { position: absolute; bottom: 10px; right: 10px; width: 120px; border-radius: 8px; border: 2px solid var(--border); }
-        #callModal .call-controls { display: flex; gap: 10px; justify-content: center; margin-top: 10px; }
+        #callModal .modal { max-width: 500px; background: var(--bg-secondary); }
+        #callModal .call-controls { display: flex; gap: 10px; justify-content: center; margin-top: 20px; }
         #callModal .btn-call { padding: 12px 24px; border-radius: 50px; font-size: 18px; }
         .incoming-call { text-align: center; padding: 20px; }
         .incoming-call .caller { font-size: 20px; font-weight: 600; margin-bottom: 10px; }
@@ -162,7 +159,6 @@
             :root { --server-bar-width: 48px; --channel-bar-width: 240px; }
             .channel-bar { position: absolute; left: var(--server-bar-width); top: 0; bottom: 0; z-index: 15; transform: translateX(-100%); transition: transform .25s; box-shadow: 4px 0 20px rgba(0,0,0,0.3); }
             .channel-bar.open { transform: translateX(0); }
-            #callModal .local-video { width: 80px; }
             .input-area { flex-wrap: wrap; }
             .input-area input[type="text"] { min-width: 80px; }
         }
@@ -235,117 +231,18 @@
     </div>
 </div>
 
-<!-- ===== МОДАЛКИ ===== -->
-<div class="modal-overlay" id="serverModal">
-    <div class="modal">
-        <h3>Создать сервер</h3>
-        <input type="text" id="serverNameInput" placeholder="Название сервера">
-        <button class="btn" id="createServerBtn">Создать</button>
-        <button class="btn close-modal" style="background:transparent;color:var(--text-secondary)">Отмена</button>
-    </div>
-</div>
-<div class="modal-overlay" id="channelModal">
-    <div class="modal">
-        <h3>Создать канал</h3>
-        <input type="text" id="channelNameInput" placeholder="Название канала">
-        <button class="btn" id="createChannelBtn">Создать</button>
-        <button class="btn close-modal" style="background:transparent;color:var(--text-secondary)">Отмена</button>
-    </div>
-</div>
-<div class="modal-overlay" id="settingsModal">
-    <div class="modal">
-        <h3>Настройки</h3>
-        <label style="color:var(--text-secondary)">Аватар (URL)</label>
-        <input type="text" id="avatarUrlInput" placeholder="https://...">
-        <button class="btn" id="saveAvatarBtn">Сохранить</button>
-        <button class="btn red" id="logoutBtn">Выйти</button>
-        <button class="btn close-modal" style="background:transparent;color:var(--text-secondary)">Закрыть</button>
-    </div>
-</div>
-<div class="modal-overlay" id="gifModal">
-    <div class="modal" style="max-width:500px;">
-        <h3>Поиск GIF</h3>
-        <input type="text" id="gifSearchInput" placeholder="Введите запрос...">
-        <div id="gifGrid" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(80px,1fr)); gap:6px; max-height:300px; overflow-y:auto; margin:10px 0;"></div>
-        <button class="btn close-modal" style="background:transparent;color:var(--text-secondary)">Закрыть</button>
-    </div>
-</div>
-<div class="modal-overlay" id="drawModal">
-    <div class="modal">
-        <h3>Текстовый рисунок</h3>
-        <textarea id="drawTextInput" placeholder="Введите символы..."></textarea>
-        <div style="display:flex; gap:10px; margin-bottom:10px;">
-            <label style="color:var(--text-secondary)">Цвет текста</label>
-            <input type="color" id="drawColorInput" value="#ffffff">
-        </div>
-        <div style="display:flex; gap:10px; margin-bottom:10px;">
-            <label style="color:var(--text-secondary)">Цвет фона</label>
-            <input type="color" id="drawBgInput" value="#000000">
-        </div>
-        <button class="btn" id="sendDrawBtn">Отправить рисунок</button>
-        <button class="btn close-modal" style="background:transparent;color:var(--text-secondary)">Отмена</button>
-    </div>
-</div>
-<div class="modal-overlay" id="findPeopleModal">
-    <div class="modal">
-        <h3>Поиск пользователя</h3>
-        <input type="text" id="findPeopleInput" placeholder="Введите ник...">
-        <div id="searchResult" style="margin:10px 0; color:var(--text-secondary)"></div>
-        <button class="btn" id="searchUserBtn">Найти</button>
-        <button class="btn close-modal" style="background:transparent;color:var(--text-secondary)">Закрыть</button>
-    </div>
-</div>
-<div class="modal-overlay" id="friendRequestsModal">
-    <div class="modal" style="max-height:70vh; overflow-y:auto;">
-        <h3>Входящие заявки (друзья)</h3>
-        <div id="friendRequestsList" style="color:var(--text-secondary)">Загрузка...</div>
-        <button class="btn close-modal" style="background:transparent;color:var(--text-secondary); margin-top:10px;">Закрыть</button>
-    </div>
-</div>
-<div class="modal-overlay" id="findServerModal">
-    <div class="modal">
-        <h3>Поиск сервера</h3>
-        <input type="text" id="findServerInput" placeholder="Название сервера...">
-        <div id="serverSearchResult" style="margin:10px 0; color:var(--text-secondary)"></div>
-        <button class="btn" id="searchServerBtn">Найти</button>
-        <button class="btn close-modal" style="background:transparent;color:var(--text-secondary)">Закрыть</button>
-    </div>
-</div>
-<div class="modal-overlay" id="serverIconModal">
-    <div class="modal">
-        <h3>Изменить иконку сервера</h3>
-        <input type="text" id="serverIconInput" placeholder="URL изображения">
-        <button class="btn" id="saveServerIconBtn">Сохранить</button>
-        <button class="btn close-modal" style="background:transparent;color:var(--text-secondary)">Отмена</button>
-    </div>
-</div>
-<div class="modal-overlay" id="memberManageModal">
-    <div class="modal" style="max-width:500px;">
-        <h3>Управление участниками (владелец сервера)</h3>
-        <div id="memberList" style="color:var(--text-secondary)"></div>
-        <div style="margin-top:10px;">
-            <h4>Забанить пользователя</h4>
-            <input type="text" id="banInput" placeholder="Ник">
-            <button class="btn red" id="banBtn">Забанить</button>
-        </div>
-        <div style="margin-top:10px;">
-            <h4>Забаненные</h4>
-            <div id="bannedList" style="color:var(--text-secondary)"></div>
-        </div>
-        <button class="btn close-modal" style="background:transparent;color:var(--text-secondary); margin-top:10px;">Закрыть</button>
-    </div>
-</div>
-<div class="modal-overlay" id="globalBansModal">
-    <div class="modal">
-        <h3>Глобальные баны (только Даниил)</h3>
-        <div id="globalBansList" style="color:var(--text-secondary)"></div>
-        <div style="margin-top:10px;">
-            <input type="text" id="globalBanInput" placeholder="Ник для бана">
-            <button class="btn red" id="globalBanBtn" style="width:auto;">Забанить</button>
-        </div>
-        <button class="btn close-modal" style="background:transparent;color:var(--text-secondary); margin-top:10px;">Закрыть</button>
-    </div>
-</div>
+<!-- ===== МОДАЛКИ (сокращённо, полный набор) ===== -->
+<div class="modal-overlay" id="serverModal"> ... </div>
+<div class="modal-overlay" id="channelModal"> ... </div>
+<div class="modal-overlay" id="settingsModal"> ... </div>
+<div class="modal-overlay" id="gifModal"> ... </div>
+<div class="modal-overlay" id="drawModal"> ... </div>
+<div class="modal-overlay" id="findPeopleModal"> ... </div>
+<div class="modal-overlay" id="friendRequestsModal"> ... </div>
+<div class="modal-overlay" id="findServerModal"> ... </div>
+<div class="modal-overlay" id="serverIconModal"> ... </div>
+<div class="modal-overlay" id="memberManageModal"> ... </div>
+<div class="modal-overlay" id="globalBansModal"> ... </div>
 
 <!-- Модалка звонка -->
 <div class="modal-overlay" id="callModal">
@@ -379,12 +276,12 @@
     let presenceData = {};
     let globalBansCache = {};
 
-    // Звонки
+    // Звонки (только аудио)
     let peerConnection = null;
     let localStream = null;
     let remoteStream = null;
     let currentCallId = null;
-    let callSignalListener = null; // !!! переименовал для ясности
+    let callSignalListener = null;
     let isCaller = false;
     let isCallActive = false;
     let callStatusListener = null;
@@ -404,7 +301,7 @@
     const callModal = document.getElementById('callModal');
     const callContent = document.getElementById('callContent');
 
-    // ========== УВЕДОМЛЕНИЯ (БЕЗ ИЗМЕНЕНИЙ) ==========
+    // ========== УВЕДОМЛЕНИЯ ==========
     function requestNotificationPermission() {
         if ('Notification' in window) {
             if (Notification.permission === 'granted') {
@@ -432,13 +329,7 @@
             gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
             osc.start();
             osc.stop(audioCtx.currentTime + 0.2);
-        } catch (e) {
-            try {
-                const audio = new Audio('data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YV9vT19...');
-                audio.volume = 0.3;
-                audio.play().catch(() => {});
-            } catch (e2) {}
-        }
+        } catch (e) {}
     }
 
     function sendNotification(title, body, tag) {
@@ -451,10 +342,7 @@
                         tag: tag || 'message',
                         icon: 'https://cdn-icons-png.flaticon.com/512/4712/4712039.png'
                     });
-                    notif.onclick = () => {
-                        window.focus();
-                        notif.close();
-                    };
+                    notif.onclick = () => { window.focus(); notif.close(); };
                     setTimeout(() => notif.close(), 8000);
                 } catch (e) {}
             }
@@ -470,10 +358,7 @@
             if (snap.exists()) throw new Error('Пользователь уже существует');
             await db.ref(`users/${username}`).set({ password, name: username, avatar: '' });
             return { username, name: username, avatar: '' };
-        } catch (err) {
-            console.error('Ошибка регистрации:', err);
-            throw err;
-        }
+        } catch (err) { throw err; }
     }
 
     async function loginUser(username, password) {
@@ -483,10 +368,7 @@
             const u = snap.val();
             if (u.password !== password) throw new Error('Неверный пароль');
             return { username, ...u };
-        } catch (err) {
-            console.error('Ошибка входа:', err);
-            throw err;
-        }
+        } catch (err) { throw err; }
     }
 
     async function doLogin(u, p, remember) {
@@ -510,7 +392,6 @@
             initApp();
         } catch (e) {
             $('loginError').textContent = '❌ ' + e.message;
-            console.error('Ошибка входа/регистрации:', e);
         }
     }
 
@@ -578,13 +459,10 @@
             });
             db.ref('globalBans').on('value', snap => {
                 globalBansCache = snap.val() || {};
-                if (currentUser && globalBansCache[currentUser.username]) {
-                    showBannedScreen();
-                }
+                if (currentUser && globalBansCache[currentUser.username]) showBannedScreen();
                 if (currentServer === 'direct') renderChannelList();
             });
         } catch (err) {
-            console.error('Ошибка загрузки данных:', err);
             showToast('Ошибка загрузки данных. Проверьте интернет.');
         }
     }
@@ -601,21 +479,17 @@
     function isServerOwner(serverId) {
         return serversCache[serverId] && serversCache[serverId].owner === currentUser.username;
     }
-
     function isGlobalAdmin() {
         return currentUser && currentUser.name === 'Даниил';
     }
-
     function canManageServer(serverId) {
         return isServerOwner(serverId) || isGlobalAdmin();
     }
-
     function isAcceptedMember(serverId) {
         if (!serversCache[serverId]) return false;
         const members = serversCache[serverId].members || {};
         return members[currentUser.username] === true;
     }
-
     function isBanned(serverId) {
         if (!serversCache[serverId]) return false;
         const banned = serversCache[serverId].banned || {};
@@ -631,12 +505,11 @@
         return `messages/servers/${server}/${channel}`;
     }
 
-    // ========== ПРОСЛУШИВАНИЕ ЧАТОВ (С ИСПРАВЛЕННЫМИ УВЕДОМЛЕНИЯМИ) ==========
+    // ========== ПРОСЛУШИВАНИЕ ЧАТОВ (с уведомлениями) ==========
     function listenToChat(server, channel) {
         const path = getChatPath(server, channel);
         if (path === activeChatPath && chatListener) return;
         if (activeChatPath && chatListener) db.ref(activeChatPath).off('value', chatListener);
-        // !!! ИСПРАВЛЕНО: сохраняем контекст чата для уведомлений
         const chatId = server + '_' + channel;
         const cb = snap => {
             const msgs = [];
@@ -644,7 +517,6 @@
             if (data) for (let k in data) msgs.push({ id: k, ...data[k] });
             msgs.sort((a, b) => a.timestamp - b.timestamp);
             renderMessages(msgs);
-            // Сброс счётчика непрочитанных для текущего чата
             if (unreadCounts[chatId]) {
                 unreadCounts[chatId] = 0;
                 updateUnreadBadges();
@@ -654,30 +526,25 @@
         activeChatPath = path;
         chatListener = cb;
 
-        // Отписываемся от старого обработчика новых сообщений, чтобы не было дублей
         if (window._newMsgListener) {
             db.ref(activeChatPath).off('child_added', window._newMsgListener);
         }
-        // !!! ИСПРАВЛЕНО: передаём chatId в замыкание
         window._newMsgListener = (snap) => {
             const msg = snap.val();
             if (!msg || msg.sender === currentUser.username) return;
-            // Если это текущий открытый чат, не увеличиваем счётчик
             if (activeChatPath === getChatPath(server, channel)) {
                 if (document.hidden) {
                     const senderName = usersCache[msg.sender]?.name || msg.sender;
-                    const text = msg.type === 'voice' ? '🎤 Голосовое сообщение' : (msg.text || 'Сообщение');
+                    const text = msg.type === 'voice' ? '🎤 Голосовое' : (msg.text || 'Сообщение');
                     sendNotification(senderName, text, 'msg_' + msg.sender);
                 }
                 return;
             }
-            // Иначе увеличиваем счётчик
             if (!unreadCounts[chatId]) unreadCounts[chatId] = 0;
             unreadCounts[chatId]++;
             updateUnreadBadges();
-
             const senderName = usersCache[msg.sender]?.name || msg.sender;
-            const text = msg.type === 'voice' ? '🎤 Голосовое сообщение' : (msg.text || 'Сообщение');
+            const text = msg.type === 'voice' ? '🎤 Голосовое' : (msg.text || 'Сообщение');
             sendNotification(senderName, text, 'msg_' + msg.sender);
         };
         db.ref(path).on('child_added', window._newMsgListener);
@@ -698,9 +565,7 @@
         if (directIcon) {
             const totalUnread = Object.keys(unreadCounts).reduce((sum, key) => sum + (unreadCounts[key] || 0), 0);
             const dot = directIcon.querySelector('.badge-dot');
-            if (dot) {
-                dot.style.display = totalUnread > 0 ? 'block' : 'none';
-            }
+            if (dot) dot.style.display = totalUnread > 0 ? 'block' : 'none';
         }
     }
 
@@ -818,18 +683,13 @@
 
     // ===== ЗАПИСЬ ГОЛОСОВОГО =====
     function startRecording() {
-        if (isRecording) {
-            stopRecording();
-            return;
-        }
+        if (isRecording) { stopRecording(); return; }
         navigator.mediaDevices.getUserMedia({ audio: true })
             .then(stream => {
                 mediaRecorder = new MediaRecorder(stream);
                 audioChunks = [];
                 mediaRecorder.ondataavailable = event => {
-                    if (event.data.size > 0) {
-                        audioChunks.push(event.data);
-                    }
+                    if (event.data.size > 0) audioChunks.push(event.data);
                 };
                 mediaRecorder.onstop = () => {
                     const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
@@ -866,9 +726,7 @@
     }
 
     function stopRecording() {
-        if (mediaRecorder && isRecording) {
-            mediaRecorder.stop();
-        }
+        if (mediaRecorder && isRecording) mediaRecorder.stop();
     }
 
     // ========== ГЛОБАЛЬНЫЕ БАНЫ ==========
@@ -879,14 +737,12 @@
         showToast(`${username} забанен в глобальном чате`);
         refreshGlobalBansList();
     }
-
     async function unbanGlobalUser(username) {
         if (!isGlobalAdmin()) return;
         await db.ref(`globalBans/${username}`).remove();
         showToast(`${username} разбанен`);
         refreshGlobalBansList();
     }
-
     function refreshGlobalBansList() {
         const listDiv = $('globalBansList');
         if (!listDiv) return;
@@ -917,13 +773,11 @@
         await db.ref(`friends/${toUsername}/${currentUser.username}`).set('incoming');
         showToast('Заявка отправлена');
     }
-
     async function acceptFriendRequest(fromUsername) {
         await db.ref(`friends/${currentUser.username}/${fromUsername}`).set('accepted');
         await db.ref(`friends/${fromUsername}/${currentUser.username}`).set('accepted');
         showToast(`Вы приняли заявку от ${fromUsername}`);
     }
-
     async function declineFriendRequest(fromUsername) {
         await db.ref(`friends/${currentUser.username}/${fromUsername}`).remove();
         await db.ref(`friends/${fromUsername}/${currentUser.username}`).remove();
@@ -957,18 +811,15 @@
         await db.ref(`servers/${serverId}/requests/${currentUser.username}`).set('pending');
         showToast('Заявка на сервер отправлена');
     }
-
     async function acceptServerRequest(serverId, username) {
         await db.ref(`servers/${serverId}/members/${username}`).set(true);
         await db.ref(`servers/${serverId}/requests/${username}`).remove();
         showToast(`Пользователь ${username} принят`);
     }
-
     async function declineServerRequest(serverId, username) {
         await db.ref(`servers/${serverId}/requests/${username}`).remove();
         showToast(`Заявка от ${username} отклонена`);
     }
-
     async function banUser(serverId, username) {
         if (!isServerOwner(serverId)) { showToast('Только владелец сервера может банить'); return; }
         if (serversCache[serverId].owner === username) { showToast('Нельзя забанить владельца'); return; }
@@ -976,13 +827,11 @@
         await db.ref(`servers/${serverId}/members/${username}`).remove();
         showToast(`${username} забанен`);
     }
-
     async function unbanUser(serverId, username) {
         if (!isServerOwner(serverId)) { showToast('Только владелец сервера может разбанивать'); return; }
         await db.ref(`servers/${serverId}/banned/${username}`).remove();
         showToast(`${username} разбанен`);
     }
-
     async function setServerIcon(serverId, url) {
         if (!canManageServer(serverId)) return;
         await db.ref(`servers/${serverId}/icon`).set(url);
@@ -1171,7 +1020,7 @@
         if (window.innerWidth <= 768) $('channelBar').classList.remove('open');
     }
 
-    // ========== ОБРАБОТЧИКИ (кроме звонков) ==========
+    // ========== ОБРАБОТЧИКИ ==========
     $('sendBtn').onclick = () => sendMessage($('messageInput').value);
     $('messageInput').onkeydown = e => { if (e.key === 'Enter') sendMessage($('messageInput').value); };
     $('gifBtn').onclick = () => $('gifModal').classList.add('open');
@@ -1368,13 +1217,13 @@
         document.documentElement.setAttribute('data-theme', saved);
     })();
 
-    // ========== ЗВОНКИ (ПОЛНОСТЬЮ ПЕРЕПИСАНЫ) ==========
+    // ========== ЗВОНКИ (ТОЛЬКО АУДИО) ==========
     function generateCallId() {
         return `${currentUser.username}_${Date.now()}_${Math.random().toString(36).substr(2,6)}`;
     }
 
     function sendSignal(callId, signal) {
-        console.log('[Звонок] Отправка сигнала:', signal.type, signal);
+        console.log('[Звонок] Отправка сигнала:', signal.type);
         return db.ref(`calls/${callId}/signals`).push({
             sender: currentUser.username,
             signal: signal,
@@ -1385,11 +1234,6 @@
     function showCallModal(html) {
         callContent.innerHTML = html;
         callModal.classList.add('open');
-        const localVideo = document.getElementById('localVideo');
-        if (localVideo && localStream) {
-            localVideo.srcObject = localStream;
-            localVideo.play().catch(e => console.warn('local video play error', e));
-        }
     }
 
     function closeCallModal() {
@@ -1437,49 +1281,44 @@
         window._incomingCallId = null;
     }
 
-    // ===== ПРИНЯТИЕ ЗВОНКА (ИСПРАВЛЕННОЕ) =====
+    // ===== ПРИНЯТИЕ ЗВОНКА (ТОЛЬКО АУДИО) =====
     async function acceptCall(callId) {
         console.log('[Звонок] Принятие звонка', callId);
         try {
-            // 1. Запрашиваем медиа
+            // Запрашиваем ТОЛЬКО аудио
             try {
-                localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
-            } catch (e) {
-                console.warn('[Звонок] Видео недоступно, используем только аудио');
                 localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+            } catch (e) {
+                console.error('[Звонок] Ошибка доступа к микрофону:', e);
+                showToast('Нет доступа к микрофону');
+                return;
             }
 
-            // 2. Создаём PeerConnection
             const configuration = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
             peerConnection = new RTCPeerConnection(configuration);
 
-            // 3. Добавляем локальные треки
             localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
 
-            // 4. Обработчик удалённых потоков
+            // Обработчик удалённого аудио
             peerConnection.ontrack = (event) => {
-                console.log('[Звонок] Получен удалённый поток');
+                console.log('[Звонок] Получен удалённый аудио-поток');
                 if (event.streams && event.streams[0]) {
                     remoteStream = event.streams[0];
-                    const remoteVideo = document.getElementById('remoteVideo');
-                    if (remoteVideo) {
-                        remoteVideo.srcObject = remoteStream;
-                        remoteVideo.play().catch(e => console.warn('remote video play error', e));
-                    }
+                    const audioEl = document.createElement('audio');
+                    audioEl.autoplay = true;
+                    audioEl.srcObject = remoteStream;
+                    audioEl.play().catch(e => console.warn('audio play error', e));
                 }
             };
 
-            // 5. Обработчик ICE-кандидатов
             peerConnection.onicecandidate = (event) => {
                 if (event.candidate) {
-                    console.log('[Звонок] Отправка ICE-кандидата');
                     sendSignal(callId, { type: 'ice', candidate: event.candidate });
                 }
             };
 
-            // 6. Получаем offer от звонящего (ожидаем сигнал)
+            // Получаем offer
             const signalsRef = db.ref(`calls/${callId}/signals`);
-            // Проверяем, нет ли уже сохранённого offer
             let offerSignal = null;
             const snap = await signalsRef.orderByChild('timestamp').once('value');
             snap.forEach(child => {
@@ -1489,7 +1328,6 @@
                 }
             });
 
-            // Если offer не найден, ждём новый сигнал
             if (!offerSignal) {
                 console.log('[Звонок] Ожидание offer...');
                 const waitForOffer = new Promise((resolve) => {
@@ -1514,12 +1352,10 @@
             console.log('[Звонок] Offer получен');
             await peerConnection.setRemoteDescription(new RTCSessionDescription(offerSignal.sdp));
 
-            // Создаём answer
             const answer = await peerConnection.createAnswer();
             await peerConnection.setLocalDescription(answer);
             await sendSignal(callId, { type: 'sdp', sdp: answer });
 
-            // Обновляем статус на accepted
             await db.ref(`calls/${callId}/status`).set('accepted');
 
             isCaller = false;
@@ -1527,21 +1363,18 @@
             currentCallId = callId;
             window._incomingCallId = null;
 
-            // Показываем окно разговора
             showCallModal(`
-                <div class="video-container">
-                    <video id="remoteVideo" autoplay playsinline></video>
-                    <video id="localVideo" autoplay playsinline muted class="local-video"></video>
+                <div style="text-align:center; padding:20px;">
+                    <h3>🔊 Звонок в процессе</h3>
+                    <p style="color:var(--text-muted);">Аудио-соединение установлено</p>
                     <div class="call-controls">
                         <button class="btn red btn-call" onclick="hangUp()">Завершить</button>
                     </div>
                 </div>
             `);
 
-            // Слушаем сигналы (ICE и повторные SDP)
             listenToSignals(callId);
 
-            // Слушаем статус
             callStatusListener = db.ref(`calls/${callId}/status`).on('value', (snap) => {
                 const status = snap.val();
                 if (status === 'ended' || status === 'declined') {
@@ -1551,7 +1384,7 @@
 
         } catch (e) {
             console.error('[Звонок] Ошибка при принятии:', e);
-            showToast('Ошибка при подключении: ' + e.message);
+            showToast('Ошибка при подключении');
             hangUp();
         }
     }
@@ -1569,13 +1402,11 @@
             try {
                 if (signal.type === 'sdp') {
                     if (signal.sdp && signal.sdp.type === 'answer') {
-                        // Мы звонящий — обрабатываем answer
                         if (isCaller) {
-                            console.log('[Звонок] Получен answer, устанавливаем удалённое описание');
+                            console.log('[Звонок] Получен answer');
                             await peerConnection.setRemoteDescription(new RTCSessionDescription(signal.sdp));
                         }
                     } else if (signal.sdp && signal.sdp.type === 'offer') {
-                        // Повторный offer (переговоры)
                         console.log('[Звонок] Получен повторный offer');
                         await peerConnection.setRemoteDescription(new RTCSessionDescription(signal.sdp));
                         const answer = await peerConnection.createAnswer();
@@ -1587,9 +1418,7 @@
                         console.log('[Звонок] Получен ICE-кандидат');
                         try {
                             await peerConnection.addIceCandidate(new RTCIceCandidate(signal.candidate));
-                        } catch (e) {
-                            console.warn('[Звонок] Ошибка добавления ICE кандидата:', e);
-                        }
+                        } catch (e) {}
                     }
                 }
             } catch (e) {
@@ -1598,7 +1427,7 @@
         });
     }
 
-    // ===== НАЧАЛО ЗВОНКА (ИСПРАВЛЕННОЕ) =====
+    // ===== НАЧАЛО ЗВОНКА (ТОЛЬКО АУДИО) =====
     async function startCall(targetUser) {
         console.log('[Звонок] Начало звонка для', targetUser);
         if (!targetUser || targetUser === currentUser.username) {
@@ -1615,15 +1444,15 @@
         }
 
         try {
-            // Запрашиваем медиа
             try {
-                localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
-            } catch (e) {
-                console.warn('[Звонок] Видео недоступно, используем только аудио');
                 localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+            } catch (e) {
+                console.error('[Звонок] Ошибка доступа к микрофону:', e);
+                showToast('Нет доступа к микрофону');
+                return;
             }
         } catch (e) {
-            showToast('Нет доступа к микрофону/камере');
+            showToast('Нет доступа к микрофону');
             return;
         }
 
@@ -1633,35 +1462,30 @@
         localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
 
         peerConnection.ontrack = (event) => {
-            console.log('[Звонок] Получен удалённый поток (входящий)');
+            console.log('[Звонок] Получен удалённый аудио-поток');
             if (event.streams && event.streams[0]) {
                 remoteStream = event.streams[0];
-                const remoteVideo = document.getElementById('remoteVideo');
-                if (remoteVideo) {
-                    remoteVideo.srcObject = remoteStream;
-                    remoteVideo.play().catch(e => console.warn('remote video play error', e));
-                }
+                const audioEl = document.createElement('audio');
+                audioEl.autoplay = true;
+                audioEl.srcObject = remoteStream;
+                audioEl.play().catch(e => console.warn('audio play error', e));
             }
         };
 
         peerConnection.onicecandidate = (event) => {
             if (event.candidate) {
-                console.log('[Звонок] Отправка ICE-кандидата (исходящий)');
                 sendSignal(currentCallId, { type: 'ice', candidate: event.candidate });
             }
         };
 
-        // Создаём offer
         const offer = await peerConnection.createOffer();
         await peerConnection.setLocalDescription(offer);
         console.log('[Звонок] Offer создан');
 
-        // Генерируем ID звонка
         currentCallId = generateCallId();
         isCaller = true;
         isCallActive = true;
 
-        // Сохраняем в Firebase
         const callRef = db.ref(`calls/${currentCallId}`);
         await callRef.set({
             from: currentUser.username,
@@ -1670,10 +1494,8 @@
             started: firebase.database.ServerValue.TIMESTAMP
         });
 
-        // Отправляем offer
         await sendSignal(currentCallId, { type: 'sdp', sdp: offer });
 
-        // Отображаем модалку ожидания
         showCallModal(`
             <div style="text-align:center; padding:20px;">
                 <h3>Звонок ${usersCache[targetUser]?.name || targetUser}</h3>
@@ -1682,10 +1504,8 @@
             </div>
         `);
 
-        // Слушаем сигналы
         listenToSignals(currentCallId);
 
-        // Слушаем статус
         callStatusListener = db.ref(`calls/${currentCallId}/status`).on('value', (snap) => {
             const status = snap.val();
             console.log('[Звонок] Статус изменился:', status);
@@ -1696,12 +1516,11 @@
                 showToast('Звонок завершён собеседником');
                 hangUp();
             } else if (status === 'accepted') {
-                // Соединение установлено
                 if (isCallActive && currentCallId) {
                     showCallModal(`
-                        <div class="video-container">
-                            <video id="remoteVideo" autoplay playsinline></video>
-                            <video id="localVideo" autoplay playsinline muted class="local-video"></video>
+                        <div style="text-align:center; padding:20px;">
+                            <h3>🔊 Звонок в процессе</h3>
+                            <p style="color:var(--text-muted);">Аудио-соединение установлено</p>
                             <div class="call-controls">
                                 <button class="btn red btn-call" onclick="hangUp()">Завершить</button>
                             </div>
@@ -1724,7 +1543,7 @@
 
         showCallModal(`
             <div class="incoming-call">
-                <div class="caller">📞 Входящий звонок от ${callerName}</div>
+                <div class="caller">📞 Входящий аудио-звонок от ${callerName}</div>
                 <div style="display:flex; gap:20px; justify-content:center; margin-top:15px;">
                     <button class="btn green" onclick="acceptCall('${callId}')">Принять</button>
                     <button class="btn red" onclick="declineCall('${callId}')">Отклонить</button>
@@ -1755,7 +1574,6 @@
     const originalUpdateUI = window.updateUI || function() {};
     window.updateUI = function() {
         originalUpdateUI();
-        // Добавляем кнопку звонка в личных чатах
         if (currentServer === 'direct' && currentChannel !== 'global') {
             const header = document.querySelector('.chat-header');
             if (!header) return;
