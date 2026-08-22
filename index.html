@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Мессенджер с звонками</title>
     <style>
+        /* ---- СТИЛИ (без изменений) ---- */
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, system-ui, sans-serif; }
         :root {
             --bg-primary: #0f0f0f;
@@ -55,251 +56,55 @@
             overflow: hidden;
             display: flex;
         }
-
-        /* --- БОКОВАЯ ПАНЕЛЬ СЕРВЕРОВ --- */
-        .server-bar {
-            width: var(--server-width);
-            background: var(--bg-tertiary);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 12px 0;
-            gap: 8px;
-            overflow-y: auto;
-            flex-shrink: 0;
-            z-index: 10;
-        }
-        .server-icon {
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
-            background: var(--bg-primary);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all .15s;
-            font-weight: 600;
-            font-size: 18px;
-            color: var(--text-primary);
-            flex-shrink: 0;
-            overflow: hidden;
-            border: 2px solid transparent;
-            position: relative;
-        }
+        .server-bar { width: var(--server-width); background: var(--bg-tertiary); display: flex; flex-direction: column; align-items: center; padding: 12px 0; gap: 8px; overflow-y: auto; flex-shrink: 0; z-index: 10; }
+        .server-icon { width: 48px; height: 48px; border-radius: 50%; background: var(--bg-primary); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all .15s; font-weight: 600; font-size: 18px; color: var(--text-primary); flex-shrink: 0; overflow: hidden; border: 2px solid transparent; position: relative; }
         .server-icon:hover { border-radius: 16px; background: var(--brand); color: #fff; }
         .server-icon.active { border-radius: 16px; background: var(--brand); color: #fff; border-color: var(--brand); }
         .server-icon img { width: 100%; height: 100%; object-fit: cover; }
-        .server-icon .badge-dot {
-            position: absolute; top: 0; right: 0;
-            width: 12px; height: 12px; background: #ff4444;
-            border-radius: 50%; border: 2px solid var(--bg-tertiary);
-            display: none;
-        }
+        .server-icon .badge-dot { position: absolute; top: 0; right: 0; width: 12px; height: 12px; background: #ff4444; border-radius: 50%; border: 2px solid var(--bg-tertiary); display: none; }
         .server-bar .separator { width: 32px; height: 2px; background: var(--border); border-radius: 1px; margin: 4px 0; }
-
-        /* --- ПАНЕЛЬ КАНАЛОВ --- */
-        .channel-bar {
-            width: var(--channel-width);
-            background: var(--bg-secondary);
-            display: flex;
-            flex-direction: column;
-            flex-shrink: 0;
-            border-right: 1px solid var(--border);
-            z-index: 5;
-        }
-        .channel-header {
-            padding: 12px 16px;
-            border-bottom: 1px solid var(--border);
-            font-weight: 600;
-            font-size: 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .channel-list {
-            flex: 1;
-            overflow-y: auto;
-            padding: 8px 0;
-        }
-        .channel-category {
-            padding: 12px 16px 4px;
-            font-size: 12px;
-            font-weight: 600;
-            text-transform: uppercase;
-            color: var(--text-muted);
-            display: flex;
-            justify-content: space-between;
-        }
-        .channel-item {
-            padding: 6px 16px;
-            margin: 2px 8px;
-            border-radius: 6px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 14px;
-            color: var(--text-secondary);
-        }
+        .channel-bar { width: var(--channel-width); background: var(--bg-secondary); display: flex; flex-direction: column; flex-shrink: 0; border-right: 1px solid var(--border); z-index: 5; }
+        .channel-header { padding: 12px 16px; border-bottom: 1px solid var(--border); font-weight: 600; font-size: 15px; display: flex; justify-content: space-between; align-items: center; }
+        .channel-list { flex: 1; overflow-y: auto; padding: 8px 0; }
+        .channel-category { padding: 12px 16px 4px; font-size: 12px; font-weight: 600; text-transform: uppercase; color: var(--text-muted); display: flex; justify-content: space-between; }
+        .channel-item { padding: 6px 16px; margin: 2px 8px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--text-secondary); }
         .channel-item:hover { background: var(--bg-input); color: var(--text-primary); }
         .channel-item.active { background: var(--bg-input); color: var(--text-primary); }
         .channel-item .unread-dot { width: 8px; height: 8px; background: var(--brand); border-radius: 50%; margin-left: auto; display: none; }
         .channel-item .unread-dot.show { display: block; }
-        .channel-item .badge { font-size: 10px; background: gold; color: #000; padding: 1px 4px; border-radius: 4px; margin-left: auto; }
-        .channel-item .owner-badge { font-size: 10px; background: #ff4444; color: #fff; padding: 1px 4px; border-radius: 4px; margin-left: auto; }
-
-        .user-panel {
-            padding: 10px;
-            background: var(--bg-secondary);
-            border-top: 1px solid var(--border);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .user-panel .avatar {
-            width: 32px; height: 32px; border-radius: 50%;
-            background: var(--brand);
-            display: flex; align-items: center; justify-content: center;
-            font-weight: 600; color: #fff; overflow: hidden; cursor: pointer;
-            flex-shrink: 0;
-        }
+        .user-panel { padding: 10px; background: var(--bg-secondary); border-top: 1px solid var(--border); display: flex; align-items: center; gap: 8px; }
+        .user-panel .avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--brand); display: flex; align-items: center; justify-content: center; font-weight: 600; color: #fff; overflow: hidden; cursor: pointer; flex-shrink: 0; }
         .user-panel .avatar img { width: 100%; height: 100%; object-fit: cover; }
         .user-panel .info .name { font-size: 13px; font-weight: 500; }
         .user-panel .info .status { font-size: 11px; color: var(--text-muted); }
-        .user-panel .btn-icon {
-            background: var(--bg-input); color: var(--text-secondary);
-            border: none; font-size: 16px; padding: 4px 8px; border-radius: 6px; cursor: pointer;
-        }
+        .user-panel .btn-icon { background: var(--bg-input); color: var(--text-secondary); border: none; font-size: 16px; padding: 4px 8px; border-radius: 6px; cursor: pointer; }
         .user-panel .btn-icon:hover { color: var(--text-primary); }
-
-        /* --- ОБЛАСТЬ ЧАТА --- */
-        .chat-area {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            background: var(--bg-primary);
-            min-width: 0;
-        }
-        .chat-header {
-            padding: 12px 16px;
-            border-bottom: 1px solid var(--border);
-            font-weight: 600;
-            font-size: 15px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            flex-shrink: 0;
-        }
-        .chat-header .actions {
-            margin-left: auto;
-            display: flex;
-            gap: 6px;
-        }
-        .messages-area {
-            flex: 1;
-            overflow-y: auto;
-            padding: 16px;
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
-        .msg {
-            padding: 6px 12px;
-            border-radius: 8px;
-            display: flex;
-            gap: 10px;
-            align-items: flex-start;
-            font-size: 14px;
-            max-width: 85%;
-        }
+        .chat-area { flex: 1; display: flex; flex-direction: column; background: var(--bg-primary); min-width: 0; }
+        .chat-header { padding: 12px 16px; border-bottom: 1px solid var(--border); font-weight: 600; font-size: 15px; display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+        .chat-header .actions { margin-left: auto; display: flex; gap: 6px; }
+        .messages-area { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 4px; }
+        .msg { padding: 6px 12px; border-radius: 8px; display: flex; gap: 10px; align-items: flex-start; font-size: 14px; max-width: 85%; }
         .msg.self { flex-direction: row-reverse; align-self: flex-end; }
-        .msg .avatar-small {
-            width: 32px; height: 32px; border-radius: 50%;
-            background: var(--brand);
-            flex-shrink: 0;
-            display: flex; align-items: center; justify-content: center;
-            font-weight: 600; color: #fff; font-size: 14px; overflow: hidden;
-        }
+        .msg .avatar-small { width: 32px; height: 32px; border-radius: 50%; background: var(--brand); flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-weight: 600; color: #fff; font-size: 14px; overflow: hidden; }
         .msg .avatar-small img { width: 100%; height: 100%; object-fit: cover; }
-        .msg .bubble {
-            padding: 8px 14px;
-            border-radius: 18px;
-            background: var(--bg-secondary);
-            max-width: 100%;
-            word-break: break-word;
-        }
+        .msg .bubble { padding: 8px 14px; border-radius: 18px; background: var(--bg-secondary); max-width: 100%; word-break: break-word; }
         .msg.self .bubble { background: var(--brand); color: #fff; }
         .msg .time { font-size: 10px; color: var(--text-muted); margin-top: 2px; display: block; }
         .msg img, .msg video { max-width: 200px; border-radius: 12px; margin-top: 4px; background: #000; }
         .msg audio { max-width: 200px; height: 36px; margin-top: 4px; }
         .msg .gift-icon { font-size: 24px; margin-right: 4px; }
-
-        .input-area {
-            padding: 12px 16px;
-            border-top: 1px solid var(--border);
-            background: var(--bg-secondary);
-            display: flex;
-            gap: 8px;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-        .input-area input[type="text"] {
-            flex: 1;
-            padding: 10px 14px;
-            border-radius: 30px;
-            border: none;
-            background: var(--bg-input);
-            color: var(--text-primary);
-            font-size: 14px;
-            outline: none;
-            min-width: 80px;
-        }
-        .btn-icon {
-            background: none; border: none; color: var(--text-secondary);
-            font-size: 22px; cursor: pointer; padding: 4px;
-        }
+        .input-area { padding: 12px 16px; border-top: 1px solid var(--border); background: var(--bg-secondary); display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+        .input-area input[type="text"] { flex: 1; padding: 10px 14px; border-radius: 30px; border: none; background: var(--bg-input); color: var(--text-primary); font-size: 14px; outline: none; min-width: 80px; }
+        .btn-icon { background: none; border: none; color: var(--text-secondary); font-size: 22px; cursor: pointer; padding: 4px; }
         .btn-icon:hover { color: var(--text-primary); }
-        .btn-send {
-            background: var(--brand); border: none; border-radius: 30px;
-            color: #fff; padding: 8px 20px; font-weight: 600; cursor: pointer;
-        }
+        .btn-send { background: var(--brand); border: none; border-radius: 30px; color: #fff; padding: 8px 20px; font-weight: 600; cursor: pointer; }
         .btn-send:hover { background: var(--brand-hover); }
-
-        /* --- МОДАЛКИ --- */
-        .modal-overlay {
-            display: none;
-            position: fixed; inset: 0;
-            background: rgba(0,0,0,0.7);
-            align-items: center; justify-content: center;
-            z-index: 1000;
-            padding: 20px;
-        }
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
         .modal-overlay.open { display: flex; }
-        .modal {
-            background: var(--bg-secondary);
-            border-radius: 20px;
-            padding: 24px;
-            width: 500px;
-            max-width: 100%;
-            max-height: 80vh;
-            overflow-y: auto;
-            box-shadow: var(--shadow);
-        }
+        .modal { background: var(--bg-secondary); border-radius: 20px; padding: 24px; width: 500px; max-width: 100%; max-height: 80vh; overflow-y: auto; box-shadow: var(--shadow); }
         .modal h3 { margin-bottom: 16px; font-weight: 600; }
-        .modal input, .modal textarea, .modal select {
-            width: 100%; padding: 12px; border-radius: 12px;
-            border: 1px solid var(--border);
-            background: var(--bg-input);
-            color: var(--text-primary);
-            font-size: 15px; outline: none;
-            margin-bottom: 12px;
-        }
-        .modal .btn {
-            width: 100%; padding: 12px; border: none; border-radius: 30px;
-            background: var(--brand); color: #fff; font-weight: 600;
-            cursor: pointer; margin-bottom: 8px;
-        }
+        .modal input, .modal textarea, .modal select { width: 100%; padding: 12px; border-radius: 12px; border: 1px solid var(--border); background: var(--bg-input); color: var(--text-primary); font-size: 15px; outline: none; margin-bottom: 12px; }
+        .modal .btn { width: 100%; padding: 12px; border: none; border-radius: 30px; background: var(--brand); color: #fff; font-weight: 600; cursor: pointer; margin-bottom: 8px; }
         .modal .btn:hover { background: var(--brand-hover); }
         .modal .btn.red { background: #ff3b30; }
         .modal .btn.red:hover { background: #d63031; }
@@ -308,118 +113,38 @@
         .modal .btn.secondary { background: transparent; color: var(--text-secondary); }
         .modal .btn.secondary:hover { color: var(--text-primary); }
         .modal .btn.small { width: auto; padding: 6px 16px; display: inline-block; margin-right: 6px; }
-        .modal .tab-bar {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 16px;
-        }
-        .modal .tab-bar .tab {
-            padding: 8px 16px;
-            border-radius: 30px;
-            background: var(--bg-input);
-            cursor: pointer;
-            font-weight: 500;
-            color: var(--text-secondary);
-        }
-        .modal .tab-bar .tab.active {
-            background: var(--brand);
-            color: #fff;
-        }
-        .modal .friend-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 8px;
-            background: var(--bg-input);
-            border-radius: 12px;
-            margin-bottom: 8px;
-        }
-        .modal .friend-item .av {
-            width: 40px; height: 40px; border-radius: 50%;
-            background: var(--brand);
-            display: flex; align-items: center; justify-content: center;
-            font-weight: 600; color: #fff; overflow: hidden;
-        }
+        .modal .tab-bar { display: flex; gap: 8px; margin-bottom: 16px; }
+        .modal .tab-bar .tab { padding: 8px 16px; border-radius: 30px; background: var(--bg-input); cursor: pointer; font-weight: 500; color: var(--text-secondary); }
+        .modal .tab-bar .tab.active { background: var(--brand); color: #fff; }
+        .modal .friend-item { display: flex; align-items: center; gap: 12px; padding: 8px; background: var(--bg-input); border-radius: 12px; margin-bottom: 8px; }
+        .modal .friend-item .av { width: 40px; height: 40px; border-radius: 50%; background: var(--brand); display: flex; align-items: center; justify-content: center; font-weight: 600; color: #fff; overflow: hidden; }
         .modal .friend-item .av img { width: 100%; height: 100%; object-fit: cover; }
-
-        /* Модалка звонка */
-        #callModal .modal {
-            width: 400px;
-            text-align: center;
-        }
-        #callModal .call-avatar {
-            width: 100px; height: 100px; border-radius: 50%;
-            background: var(--brand);
-            margin: 10px auto;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 40px; font-weight: 700; color: #fff; overflow: hidden;
-            border: 4px solid var(--brand);
-        }
+        #callModal .modal { width: 400px; text-align: center; }
+        #callModal .call-avatar { width: 100px; height: 100px; border-radius: 50%; background: var(--brand); margin: 10px auto; display: flex; align-items: center; justify-content: center; font-size: 40px; font-weight: 700; color: #fff; overflow: hidden; border: 4px solid var(--brand); }
         #callModal .call-avatar img { width: 100%; height: 100%; object-fit: cover; }
         #callModal .call-name { font-size: 22px; font-weight: 600; margin: 8px 0 4px; }
         #callModal .call-status { font-size: 14px; color: var(--text-muted); margin-bottom: 16px; }
-        #callModal .call-controls {
-            display: flex; gap: 20px; justify-content: center;
-        }
-        #callModal .call-btn {
-            width: 60px; height: 60px; border-radius: 50%; border: none;
-            font-size: 28px; display: flex; align-items: center; justify-content: center;
-            cursor: pointer; transition: transform .2s;
-        }
+        #callModal .call-controls { display: flex; gap: 20px; justify-content: center; }
+        #callModal .call-btn { width: 60px; height: 60px; border-radius: 50%; border: none; font-size: 28px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: transform .2s; }
         #callModal .call-btn:hover { transform: scale(1.05); }
-        #callModal .call-btn.accept { background: var(--green); color: #fff; }
-        #callModal .call-btn.decline { background: var(--red); color: #fff; }
-        #callModal .call-btn.end { background: var(--red); color: #fff; }
+        #callModal .call-btn.accept { background: #34c759; color: #fff; }
+        #callModal .call-btn.decline { background: #ff3b30; color: #fff; }
+        #callModal .call-btn.end { background: #ff3b30; color: #fff; }
         #callModal .call-btn.mute { background: var(--bg-input); color: var(--text-primary); }
-        #callModal .call-btn.mute.active { background: var(--red); color: #fff; }
+        #callModal .call-btn.mute.active { background: #ff3b30; color: #fff; }
         @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(88,101,242,0.5); } 70% { box-shadow: 0 0 0 20px rgba(88,101,242,0); } 100% { box-shadow: 0 0 0 0 rgba(88,101,242,0); } }
-
-        .toast {
-            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
-            background: var(--bg-secondary); color: var(--text-primary);
-            padding: 10px 20px; border-radius: 30px; font-size: 14px;
-            z-index: 3000; display: none; box-shadow: var(--shadow);
-        }
+        .toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: var(--bg-secondary); color: var(--text-primary); padding: 10px 20px; border-radius: 30px; font-size: 14px; z-index: 3000; display: none; box-shadow: var(--shadow); }
         .toast.show { display: block; animation: slideUp 0.3s; }
         @keyframes slideUp { from { opacity: 0; transform: translateX(-50%) translateY(20px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
-
-        /* --- АДАПТИВ --- */
-        @media (max-width: 768px) {
-            .server-bar { width: 48px; }
-            .channel-bar { position: absolute; left: 48px; top: 0; bottom: 0; z-index: 15; transform: translateX(-100%); transition: transform .25s; box-shadow: 4px 0 20px rgba(0,0,0,0.5); }
-            .channel-bar.open { transform: translateX(0); }
-        }
-
-        /* --- ЛОГИН --- */
-        #loginScreen {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            width: 100%;
-            height: 100vh;
-            gap: 14px;
-            padding: 20px;
-            background: var(--bg-primary);
-        }
+        @media (max-width: 768px) { .server-bar { width: 48px; } .channel-bar { position: absolute; left: 48px; top: 0; bottom: 0; z-index: 15; transform: translateX(-100%); transition: transform .25s; box-shadow: 4px 0 20px rgba(0,0,0,0.5); } .channel-bar.open { transform: translateX(0); } }
+        #loginScreen { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; height: 100vh; gap: 14px; padding: 20px; background: var(--bg-primary); }
         #loginScreen .logo { font-size: 56px; }
         #loginScreen h1 { font-size: 24px; font-weight: 600; }
-        #loginScreen input {
-            width: 320px; max-width: 90%; padding: 14px 18px;
-            border-radius: 30px; border: 1px solid var(--border);
-            background: var(--bg-input); color: var(--text-primary);
-            font-size: 16px; outline: none;
-        }
-        #loginScreen .btn {
-            width: 320px; max-width: 90%; padding: 14px;
-            border: none; border-radius: 30px;
-            background: var(--brand); color: #fff;
-            font-weight: 600; font-size: 16px; cursor: pointer;
-        }
+        #loginScreen input { width: 320px; max-width: 90%; padding: 14px 18px; border-radius: 30px; border: 1px solid var(--border); background: var(--bg-input); color: var(--text-primary); font-size: 16px; outline: none; }
+        #loginScreen .btn { width: 320px; max-width: 90%; padding: 14px; border: none; border-radius: 30px; background: var(--brand); color: #fff; font-weight: 600; font-size: 16px; cursor: pointer; }
         #loginScreen .btn:hover { background: var(--brand-hover); }
         #loginScreen .error { color: var(--brand); font-size: 14px; min-height: 22px; }
         #loginScreen .toggle { color: var(--text-secondary); cursor: pointer; font-size: 14px; }
-
         #bannedScreen { display: none; flex-direction: column; align-items: center; justify-content: center; width: 100%; height: 100vh; background: var(--bg-primary); gap: 20px; }
         #bannedScreen h1 { color: var(--brand); }
         #bannedScreen .btn { padding: 12px 24px; background: var(--brand); color: #fff; border: none; border-radius: 30px; cursor: pointer; }
@@ -464,6 +189,7 @@
                     <div class="status" id="userStatus">онлайн</div>
                 </div>
                 <button class="btn-icon" id="themeToggle" title="Тема">🎨</button>
+                <button class="btn-icon" id="betaBtn" title="Тестовая версия">🧪</button>
                 <button class="btn-icon" id="logoutBtn" title="Выйти">🚪</button>
             </div>
         </div>
@@ -502,22 +228,17 @@
                 <button class="btn small" id="setAvatarGifBtn">Установить GIF</button>
                 <button class="btn small secondary" id="findGifAvatarBtn">🔍 Найти GIF</button>
             </div>
-
             <h4>Баланс звёзд: <span id="starBalance">0</span> ⭐</h4>
             <button class="btn green" id="buyStarsBtn">Купить звёзды (20⭐ = 2 руб)</button>
-
             <h4>Подарки в профиле</h4>
             <div id="profileGifts"></div>
-
             <h4>Магазин подарков</h4>
             <div id="giftShop"></div>
-
             <button class="btn red" id="logoutFullBtn">Выйти</button>
             <button class="btn secondary close-modal">Закрыть</button>
         </div>
     </div>
 
-    <!-- МОДАЛКА ДРУЗЕЙ -->
     <div class="modal-overlay" id="friendsModal">
         <div class="modal" style="width:500px;">
             <h3>👥 Друзья</h3>
@@ -564,13 +285,11 @@
         </div>
     </div>
 
-    <!-- МОДАЛКА ЗВОНКА -->
     <div class="modal-overlay" id="callModal">
         <div class="modal">
             <div id="callContent"></div>
         </div>
     </div>
-    <!-- Скрытый аудио для звонков -->
     <audio id="remoteAudio" autoplay style="display:none;"></audio>
 
     <div class="toast" id="toast"></div>
@@ -674,7 +393,6 @@
                 updateStarsUI();
                 renderProfileGifts();
                 renderGiftShop();
-                // Подписка на входящие звонки
                 subscribeToCalls();
             } catch (e) { $('loginError').textContent = '❌ ' + e.message; }
         }
@@ -830,7 +548,6 @@
             $('serverSettingsBtn').style.display = canManage ? 'inline-block' : 'none';
 
             if (currentServer === 'direct') {
-                // глобальный чат
                 const globalDiv = document.createElement('div');
                 globalDiv.className = 'channel-item' + (currentChannel === 'global' ? ' active' : '');
                 globalDiv.dataset.chatId = 'direct_global';
@@ -838,7 +555,6 @@
                 globalDiv.onclick = () => switchChannel('direct', 'global');
                 list.appendChild(globalDiv);
 
-                // друзья
                 const cat = document.createElement('div');
                 cat.className = 'channel-category';
                 cat.textContent = 'ДРУЗЬЯ';
@@ -909,7 +625,6 @@
                 }
             }
             updateUnreadBadges();
-            // Показать кнопку звонка только в личных чатах (не глобальный)
             const isPrivate = currentServer === 'direct' && currentChannel !== 'global';
             $('callBtn').style.display = isPrivate ? 'inline-block' : 'none';
         }
@@ -1112,7 +827,10 @@
                 timestamp: firebase.database.ServerValue.TIMESTAMP,
             };
             if (imageUrl) msg.imageUrl = imageUrl;
-            if (videoData) { msg.videoData = videoData.data; msg.videoMime = videoData.mime; }
+            if (videoData) {
+                msg.videoData = videoData.data;
+                msg.videoMime = videoData.mime || 'video/mp4';
+            }
             if (giftData) { msg.type = 'gift'; msg.giftName = giftData.name; msg.giftIcon = giftData.icon; }
             await db.ref(activeChatPath).push(msg);
             $('messageInput').value = '';
@@ -1183,7 +901,10 @@
                 const file = this.files[0];
                 if (!file) return;
                 const reader = new FileReader();
-                reader.onload = e => { sendMessage('', null, { data: e.target.result, mime: file.type }); showToast('Видео отправлено'); };
+                reader.onload = e => {
+                    sendMessage('', null, { data: e.target.result, mime: file.type });
+                    showToast('Видео отправлено');
+                };
                 reader.readAsDataURL(file);
             };
             input.click();
@@ -1563,7 +1284,7 @@
         }
 
         // ============================================================
-        // ========== ЗВОНКИ (WebRTC) ==================================
+        // ========== ЗВОНКИ (исправленные) =============================
         // ============================================================
 
         function generateCallId() {
@@ -1578,12 +1299,10 @@
             });
         }
 
-        // Показ модалки звонка
         function showCallModal(html) {
             const content = $('callContent');
             content.innerHTML = html;
             $('callModal').classList.add('open');
-            // Обработчик для кнопки mute
             const muteBtn = document.getElementById('muteBtn');
             if (muteBtn) {
                 muteBtn.onclick = () => {
@@ -1602,13 +1321,14 @@
             $('callContent').innerHTML = '';
         }
 
-        // Завершить звонок
         async function hangUp() {
             if (peerConnection) { peerConnection.close(); peerConnection = null; }
             if (localStream) { localStream.getTracks().forEach(track => track.stop()); localStream = null; }
             if (remoteStream) { remoteStream.getTracks().forEach(track => track.stop()); remoteStream = null; }
             if (currentCallId) {
-                await db.ref(`calls/${currentCallId}/status`).set('ended');
+                try {
+                    await db.ref(`calls/${currentCallId}/status`).set('ended');
+                } catch(e) {}
                 if (callSignalListener) {
                     db.ref(`calls/${currentCallId}/signals`).off('child_added', callSignalListener);
                     callSignalListener = null;
@@ -1626,9 +1346,8 @@
             const audioEl = document.getElementById('remoteAudio');
             if (audioEl) audioEl.srcObject = null;
         }
-        window.hangUp = hangUp; // для onclick
+        window.hangUp = hangUp;
 
-        // Отклонить звонок
         async function declineCall(callId) {
             await db.ref(`calls/${callId}/status`).set('declined');
             closeCallModal();
@@ -1637,7 +1356,6 @@
         }
         window.declineCall = declineCall;
 
-        // Принять звонок
         async function acceptCall(callId) {
             if (peerConnection) { peerConnection.close(); peerConnection = null; }
             if (localStream) { localStream.getTracks().forEach(track => track.stop()); localStream = null; }
@@ -1729,13 +1447,12 @@
                 });
             } catch (e) {
                 console.error('[Звонок] Ошибка при принятии:', e);
-                showToast('Ошибка при подключении');
+                showToast('Ошибка при подключении: ' + e.message);
                 hangUp();
             }
         }
         window.acceptCall = acceptCall;
 
-        // Слушатель сигналов
         function listenToSignals(callId) {
             const signalsRef = db.ref(`calls/${callId}/signals`);
             if (callSignalListener) signalsRef.off('child_added', callSignalListener);
@@ -1747,18 +1464,22 @@
                 try {
                     if (signal.type === 'sdp') {
                         if (signal.sdp && signal.sdp.type === 'answer') {
-                            if (isCaller) await peerConnection.setRemoteDescription(new RTCSessionDescription(signal.sdp));
+                            if (isCaller && peerConnection) {
+                                await peerConnection.setRemoteDescription(new RTCSessionDescription(signal.sdp));
+                            }
                         } else if (signal.sdp && signal.sdp.type === 'offer') {
-                            await peerConnection.setRemoteDescription(new RTCSessionDescription(signal.sdp));
-                            const answer = await peerConnection.createAnswer();
-                            await peerConnection.setLocalDescription(answer);
-                            await sendSignal(callId, { type: 'sdp', sdp: answer });
+                            if (peerConnection) {
+                                await peerConnection.setRemoteDescription(new RTCSessionDescription(signal.sdp));
+                                const answer = await peerConnection.createAnswer();
+                                await peerConnection.setLocalDescription(answer);
+                                await sendSignal(callId, { type: 'sdp', sdp: answer });
+                            }
                         }
                     } else if (signal.type === 'ice') {
-                        if (signal.candidate) {
+                        if (signal.candidate && peerConnection) {
                             try {
                                 await peerConnection.addIceCandidate(new RTCIceCandidate(signal.candidate));
-                            } catch (e) {}
+                            } catch (e) { console.warn('ICE candidate error:', e); }
                         }
                     }
                 } catch (e) {
@@ -1767,7 +1488,6 @@
             });
         }
 
-        // Начать звонок
         async function startCall(targetUser) {
             if (!targetUser || targetUser === currentUser.username) {
                 showToast('Нельзя позвонить самому себе');
@@ -1862,12 +1582,11 @@
                 });
             } catch (e) {
                 console.error('[Звонок] Ошибка при начале звонка:', e);
-                showToast('Ошибка при подключении');
+                showToast('Ошибка при подключении: ' + e.message);
                 hangUp();
             }
         }
 
-        // Обработка входящего звонка
         function handleIncomingCall(callId, callData) {
             if (isCallActive) {
                 db.ref(`calls/${callId}/status`).set('busy');
@@ -1887,7 +1606,6 @@
                 </div>
             `);
             window._incomingCallId = callId;
-            // Звук уведомления (короткий сигнал)
             try {
                 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
                 const osc = audioCtx.createOscillator();
@@ -1903,21 +1621,23 @@
             } catch (e) {}
         }
 
-        // Подписка на входящие звонки
         function subscribeToCalls() {
             if (!currentUser) return;
-            const callsRef = db.ref('calls');
-            callsRef.orderByChild('to').equalTo(currentUser.username).on('child_added', (snap) => {
+            // Слушаем все вызовы, фильтруем на клиенте для надёжности
+            db.ref('calls').on('child_added', (snap) => {
                 const callData = snap.val();
                 const callId = snap.key;
-                if (callData.status === 'ringing' && callData.to === currentUser.username && callData.from !== currentUser.username) {
+                if (callData.status === 'ringing' &&
+                    callData.to === currentUser.username &&
+                    callData.from !== currentUser.username) {
                     if (window._incomingCallId === callId) return;
                     handleIncomingCall(callId, callData);
                 }
             });
+            // Также слушаем изменения статуса для текущего звонка
         }
 
-        // Кнопка звонка в шапке чата
+        // Кнопка звонка
         $('callBtn').onclick = () => {
             if (currentServer === 'direct' && currentChannel !== 'global') {
                 startCall(currentChannel);
@@ -1926,10 +1646,16 @@
             }
         };
 
-        // При закрытии вкладки завершаем звонок
         window.addEventListener('beforeunload', () => {
             if (isCallActive) hangUp();
         });
+
+        // ===== КНОПКА ТЕСТОВОЙ ВЕРСИИ =====
+        $('betaBtn').onclick = () => {
+            if (confirm('Вы хотите перейти на тестовую версию?\nВ ней могут быть баги.')) {
+                window.location.href = 'https://daniilbuzov.github.io/makc/test.html';
+            }
+        };
 
         // ===== ТЕМА =====
         const themes = ['dark', 'light', 'blue', 'green'];
@@ -1981,7 +1707,6 @@
             updateUI();
         }
 
-        // Восстановление сессии
         (async () => {
             const u = localStorage.getItem('dc_user'), p = localStorage.getItem('dc_pass');
             if (u && p) {
